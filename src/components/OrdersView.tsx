@@ -92,9 +92,10 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
       });
     }
 
-    return filtered;
-  }, [orders, selectedStatusTab, selectedChannel, selectedPayment, searchFilter]);
-
+        // ✅ I-exclude yung mga na-delete na orders
+    return filtered.filter(order => !deletedOrderIds.includes(order.orderId));
+  }, [orders, selectedStatusTab, selectedChannel, selectedPayment, searchFilter, deletedOrderIds]);
+  
   const handleToggleSelectAll = () => {
     if (selectedStatusTab === 'ordered') return;
     if (selectedOrderIds.length === filteredOrders.length) {
