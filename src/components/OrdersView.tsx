@@ -469,7 +469,8 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                                     referrerPolicy="no-referrer"
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      (e.target as HTMLImageElement).src = 'data:image/svg+xml,%3Csvg xmlns="http://www.w3.org/2000/svg" width="32" height="32"%3E%3Crect width="32" height="32" fill="%23e2e8f0"/%3E%3Ctext x="16" y="16" text-anchor="middle" dy=".3em" fill="%2394a3b8" font-size="8"%3ENo%20Img%3C/text%3E%3C/svg%3E';
+                                      // ✅ PERMANENT FALLBACK IMAGE kapag nag-fail yung load
+                                      e.currentTarget.src = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=200&auto=format&fit=crop&q=80';
                                     }}
                                   />
                                 ) : (
