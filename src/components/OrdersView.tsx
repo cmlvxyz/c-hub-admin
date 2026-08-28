@@ -95,7 +95,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
         // ✅ I-exclude yung mga na-delete na orders
     return filtered.filter(order => !deletedOrderIds.includes(order.orderId));
   }, [orders, selectedStatusTab, selectedChannel, selectedPayment, searchFilter, deletedOrderIds]);
-  
+
   const handleToggleSelectAll = () => {
     if (selectedStatusTab === 'ordered') return;
     if (selectedOrderIds.length === filteredOrders.length) {
@@ -142,26 +142,25 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
     exportToCSV(`CHUB_Orders_${new Date().toISOString().split('T')[0]}`, rows);
   };
 
-    // ✅ Handle Delete Order - Direct na tawag sa backend at mag-a-update sa UI
-    const handleDeleteOrder = async (orderId: string) => {
-    // ✅ 1. Aalisin agad sa UI (Optimistic Update) - HINDI NA MAGHIHINTAY
-    setDeletedOrderIds(prev => [...prev, orderId]);
-    
-    // ✅ 2. Saka natin i-fetch yung backend sa background
-    try {
-      const response = await fetch(`https://c-hub-backend-ijy4.onrender.com/api/orders/${orderId}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        console.log(`✅ Deleted order ${orderId} from server`);
-      } else {
-        console.error('❌ Failed to delete from server:', response.status);
-      }
-    } catch (error) {
-      console.error('❌ Failed to delete order:', error);
-    }
-  };
+      const handleDeleteOrder = async (orderId: string) => {
+        // ✅ 1. Aalisin agad sa UI (Optimistic Update)
+        setDeletedOrderIds(prev => [...prev, orderId]);
+        
+        // ✅ 2. Saka natin i-fetch yung backend sa background
+        try {
+          const response = await fetch(`https://c-hub-backend-ijy4.onrender.com/api/orders/${orderId}`, {
+            method: 'DELETE'
+          });
+          
+          if (response.ok) {
+            console.log(`✅ Deleted order ${orderId} from server`);
+          } else {
+            console.error('❌ Failed to delete from server:', response.status);
+          }
+        } catch (error) {
+          console.error('❌ Failed to delete order:', error);
+        }
+      };
 
   const totalOrders = (orders || []).length;
   const activeOrders = (orders || []).filter(o => o?.status !== 'Cancelled' && o?.status !== 'Completed').length;
