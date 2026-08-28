@@ -51,6 +51,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
 
   const [deletedOrderIds, setDeletedOrderIds] = useState<string[]>([]);
 
+  // ✅ GINAMIT NATIN YUNG FILTERED ORDERS PARA SA MGA COUNT
   const filteredOrders = useMemo(() => {
     const safeOrders = orders || [];
     
@@ -92,7 +93,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
       });
     }
 
-        // ✅ I-exclude yung mga na-delete na orders
+    // ✅ I-EXCLUDE YUNG MGA NA-DELETE NA ORDERS
     return filtered.filter(order => !deletedOrderIds.includes(order.orderId));
   }, [orders, selectedStatusTab, selectedChannel, selectedPayment, searchFilter, deletedOrderIds]);
 
@@ -142,30 +143,31 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
     exportToCSV(`CHUB_Orders_${new Date().toISOString().split('T')[0]}`, rows);
   };
 
-      const handleDeleteOrder = async (orderId: string) => {
-        // ✅ 1. Aalisin agad sa UI (Optimistic Update)
-        setDeletedOrderIds(prev => [...prev, orderId]);
-        
-        // ✅ 2. Saka natin i-fetch yung backend sa background
-        try {
-          const response = await fetch(`https://c-hub-backend-ijy4.onrender.com/api/orders/${orderId}`, {
-            method: 'DELETE'
-          });
-          
-          if (response.ok) {
-            console.log(`✅ Deleted order ${orderId} from server`);
-          } else {
-            console.error('❌ Failed to delete from server:', response.status);
-          }
-        } catch (error) {
-          console.error('❌ Failed to delete order:', error);
-        }
-      };
+  const handleDeleteOrder = async (orderId: string) => {
+    // ✅ 1. Aalisin agad sa UI (Optimistic Update)
+    setDeletedOrderIds(prev => [...prev, orderId]);
+    
+    // ✅ 2. Saka natin i-fetch yung backend sa background
+    try {
+      const response = await fetch(`https://c-hub-backend-ijy4.onrender.com/api/orders/${orderId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        console.log(`✅ Deleted order ${orderId} from server`);
+      } else {
+        console.error('❌ Failed to delete from server:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Failed to delete order:', error);
+    }
+  };
 
-  const totalOrders = (orders || []).length;
-  const activeOrders = (orders || []).filter(o => o?.status !== 'Cancelled' && o?.status !== 'Completed').length;
-  const completedOrders = (orders || []).filter(o => o?.status === 'Completed').length;
-  const cancelledOrders = (orders || []).filter(o => o?.status === 'Cancelled').length;
+  // ✅ GAMITIN NATIN YUNG FILTERED ORDERS PARA SA MGA COUNT PARA BUMABA AGAD!
+  const totalOrders = filteredOrders.length;
+  const activeOrders = filteredOrders.filter(o => o?.status !== 'Cancelled' && o?.status !== 'Completed').length;
+  const completedOrders = filteredOrders.filter(o => o?.status === 'Completed').length;
+  const cancelledOrders = filteredOrders.filter(o => o?.status === 'Cancelled').length;
   const orderedCount = completedOrders + cancelledOrders;
   const isOrderedTab = selectedStatusTab === 'ordered';
 
@@ -192,6 +194,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
             <span>Export CSV</span>
           </button>
 
+          {/* ✅ TINANGGAL NA ANG TEST NEW ORDER PARA MISMONG USER NA ANG MAG-ORDER */}
           <button
             onClick={onOpenStoreModal}
             className="px-3.5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-md shadow-indigo-600/25 flex items-center gap-1.5"
