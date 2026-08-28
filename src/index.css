@@ -1,0 +1,42 @@
+@import "tailwindcss";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@layer base {
+  :root {
+    color-scheme: light;
+  }
+  .dark {
+    color-scheme: dark;
+  }
+  html {
+    @apply transition-colors duration-200;
+  }
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased transition-colors duration-200;
+  }
+  .dark body {
+    @apply bg-slate-950 text-slate-100;
+  }
+
+  /* Custom scrollbar for dark/light modes */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    @apply bg-slate-300 dark:bg-slate-700 rounded-full;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-slate-400 dark:bg-slate-600;
+  }
+
+  /* Ensure select options have dark background in dark mode */
+  .dark select option {
+    background-color: #0f172a;
+    color: #f8fafc;
+  }
+}
