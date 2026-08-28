@@ -1067,27 +1067,80 @@ function getDefaultProducts(): Product[] {
   ];
 }
 
-// ============ INIT DATA ============
 let products: Product[] = loadProductsFromFile();
 let orders: Order[] = loadOrdersFromFile();
 
-// ✅ Function to enrich order items with product images
+// ✅ Function to enrich order items with product images - FIXED with BASE_URL
 function enrichOrdersWithProductImages(ordersData: Order[]): Order[] {
+  const BASE_URL = 'https://c-hub-backend-ijy4.onrender.com';
+  
   return ordersData.map(order => ({
     ...order,
     items: order.items.map(item => {
-      // Hanapin ang product sa products array gamit ang productId
-      const product = products.find(p => p.id === item.productId);
-      if (product && product.image) {
-        return { ...item, image: product.image };
+      // ✅ KUNG MAY IMAGE NA, I-CONVERT SA FULL URL
+      if (item.image) {
+        // Kung nagsisimula sa /, idagdag ang BASE_URL
+        if (item.image.startsWith('/')) {
+          return { ...item, image: `${BASE_URL}${item.image}` };
+        }
+        // Kung hindi nagsisimula sa / at walang http, idagdag ang BASE_URL + /
+        if (!item.image.startsWith('http://') && !item.image.startsWith('https://')) {
+          return { ...item, image: `${BASE_URL}/${item.image}` };
+        }
+        return item;
       }
-      // Kung walang productId, subukan gamit ang SKU
-      if (!product) {
-        const productBySku = products.find(p => p.sku === item.sku);
-        if (productBySku && productBySku.image) {
-          return { ...item, image: productBySku.image };
+      
+      // ✅ KUNG WALA, SUBUKAN HANAPIN SA DATABASE
+      let product = null;
+      
+      // 1. Hanapin gamit ang productId
+      if (item.productId) {
+        product = products.find(p => p.id === item.productId);
+      }
+      
+      // 2. Hanapin gamit ang SKU (kung hindi N/A)
+      if (!product && item.sku && item.sku !== 'N/A') {
+        product = products.find(p => p.sku === item.sku);
+      }
+      
+      // 3. Hanapin gamit ang exact name
+      if (!product && item.name) {
+        product = products.find(p => p.name === item.name);
+        if (product) console.log(`✅ Found by exact name: ${item.name}`);
+      }
+      
+      // 4. Hanapin gamit ang base name (without size/color)
+      if (!product && item.name) {
+        const itemBaseName = item.name.split(' - ')[0];
+        product = products.find(p => {
+          const productBaseName = p.name.split(' - ')[0];
+          return productBaseName === itemBaseName;
+        });
+        if (product) console.log(`✅ Found by base name: ${item.name}`);
+      }
+      
+      // 5. Hanapin gamit ang partial match (last resort)
+      if (!product && item.name) {
+        const itemNameLower = item.name.toLowerCase();
+        const matches = products.filter(p => 
+          p.name.toLowerCase().includes(itemNameLower) || 
+          itemNameLower.includes(p.name.toLowerCase())
+        );
+        if (matches.length > 0) {
+          product = matches.reduce((a, b) => a.name.length > b.name.length ? a : b);
+          if (product) console.log(`✅ Found by partial match: ${item.name}`);
         }
       }
+      
+      if (product && product.image) {
+        // I-convert din ang product image sa full URL
+        const imageUrl = product.image.startsWith('/') 
+          ? `${BASE_URL}${product.image}` 
+          : product.image;
+        return { ...item, image: imageUrl };
+      }
+      
+      console.log(`❌ No product found for: ${item.name}`);
       return item;
     })
   }));
@@ -1118,10 +1171,10 @@ app.post('/api/orders/sync', (req, res) => {
   try {
     const { orders: clientOrders } = req.body;
     if (Array.isArray(clientOrders)) {
-      // I-enrich ang orders ng product images
+      console.log(`🔄 Syncing ${clientOrders.length} orders from client...`);
+      
       const enrichedOrders = enrichOrdersWithProductImages(clientOrders);
       
-      // I-merge ang orders
       const existingIds = new Set(orders.map(o => o.orderId));
       
       enrichedOrders.forEach((clientOrder: Order) => {
@@ -1136,10 +1189,9 @@ app.post('/api/orders/sync', (req, res) => {
         }
       });
       
-      // ✅ I-save sa file
       saveOrdersToFile(orders);
       
-      console.log(`🔄 Synced ${orders.length} total orders from client`);
+      console.log(`✅ Synced ${orders.length} total orders from client`);
       broadcastSSE('order_sync', { count: orders.length });
       res.json({ success: true, count: orders.length });
     } else {
@@ -1153,12 +1205,14 @@ app.post('/api/orders/sync', (req, res) => {
 
 // Orders
 app.get('/api/orders', (req, res) => {
-  // ✅ I-enrich ang orders ng product images bago i-send
+  console.log(`📦 Loading ${orders.length} orders...`);
   const enrichedOrders = enrichOrdersWithProductImages(orders);
   res.json(enrichedOrders);
 });
 
 app.post('/api/orders', (req, res) => {
+  const BASE_URL = 'https://c-hub-backend-ijy4.onrender.com';
+  
   const newOrder: Order = {
     ...req.body,
     orderId: req.body.orderId || `CHUB-ORD-${Math.floor(1000 + Math.random() * 9000)}`,
@@ -1167,11 +1221,46 @@ app.post('/api/orders', (req, res) => {
     updatedAt: new Date().toISOString()
   };
 
-  // ✅ I-enrich ang items ng product images
+  // ✅ I-enrich ang items ng product images na may full URL
   const enrichedItems = newOrder.items.map(item => {
-    const product = products.find(p => p.id === item.productId);
+    // Kung may image na, i-convert sa full URL
+    if (item.image) {
+      if (item.image.startsWith('/')) {
+        return { ...item, image: `${BASE_URL}${item.image}` };
+      }
+      if (!item.image.startsWith('http://') && !item.image.startsWith('https://')) {
+        return { ...item, image: `${BASE_URL}/${item.image}` };
+      }
+      return item;
+    }
+    
+    let product = null;
+    
+    if (item.productId) {
+      product = products.find(p => p.id === item.productId);
+    }
+    
+    if (!product && item.sku && item.sku !== 'N/A') {
+      product = products.find(p => p.sku === item.sku);
+    }
+    
+    if (!product && item.name) {
+      product = products.find(p => p.name === item.name);
+    }
+    
+    if (!product && item.name) {
+      const itemBaseName = item.name.split(' - ')[0];
+      product = products.find(p => {
+        const productBaseName = p.name.split(' - ')[0];
+        return productBaseName === itemBaseName;
+      });
+    }
+    
     if (product && product.image) {
-      return { ...item, image: product.image };
+      const imageUrl = product.image.startsWith('/') 
+        ? `${BASE_URL}${product.image}` 
+        : product.image;
+      return { ...item, image: imageUrl };
     }
     return item;
   });
@@ -1190,6 +1279,7 @@ app.post('/api/orders', (req, res) => {
 });
 
 app.patch('/api/orders/:id', (req, res) => {
+  const BASE_URL = 'https://c-hub-backend-ijy4.onrender.com';
   const { id } = req.params;
   const index = orders.findIndex(o => o.orderId === id);
   if (index === -1) {
@@ -1202,11 +1292,46 @@ app.patch('/api/orders/:id', (req, res) => {
     updatedAt: new Date().toISOString()
   };
 
-  // ✅ I-enrich ang items ng product images
+  // ✅ I-enrich ang items ng product images na may full URL
   orders[index].items = orders[index].items.map(item => {
-    const product = products.find(p => p.id === item.productId);
+    // Kung may image na, i-convert sa full URL
+    if (item.image) {
+      if (item.image.startsWith('/')) {
+        return { ...item, image: `${BASE_URL}${item.image}` };
+      }
+      if (!item.image.startsWith('http://') && !item.image.startsWith('https://')) {
+        return { ...item, image: `${BASE_URL}/${item.image}` };
+      }
+      return item;
+    }
+    
+    let product = null;
+    
+    if (item.productId) {
+      product = products.find(p => p.id === item.productId);
+    }
+    
+    if (!product && item.sku && item.sku !== 'N/A') {
+      product = products.find(p => p.sku === item.sku);
+    }
+    
+    if (!product && item.name) {
+      product = products.find(p => p.name === item.name);
+    }
+    
+    if (!product && item.name) {
+      const itemBaseName = item.name.split(' - ')[0];
+      product = products.find(p => {
+        const productBaseName = p.name.split(' - ')[0];
+        return productBaseName === itemBaseName;
+      });
+    }
+    
     if (product && product.image) {
-      return { ...item, image: product.image };
+      const imageUrl = product.image.startsWith('/') 
+        ? `${BASE_URL}${product.image}` 
+        : product.image;
+      return { ...item, image: imageUrl };
     }
     return item;
   });
@@ -1272,7 +1397,21 @@ app.patch('/api/products/:id', (req, res) => {
   res.json({ success: true, product: products[index] });
 });
 
-// ... rest of the endpoints (alerts, gateways, reviews, analytics, purchase-orders) remain the same ...
+app.delete('/api/products/:id', (req, res) => {
+  const { id } = req.params;
+  const index = products.findIndex(p => p.id === id);
+  if (index === -1) {
+    return res.status(404).json({ error: 'Product not found' });
+  }
+
+  const deletedProduct = products[index];
+  products.splice(index, 1);
+  saveProductsToFile(products);
+  broadcastSSE('inventory_sync', products);
+  console.log(`🗑️ Product deleted: ${id}`);
+  
+  res.json({ success: true, product: deletedProduct });
+});
 
 // ============ SSE ENDPOINT ============
 app.get('/api/orders/stream/public', (req, res) => {

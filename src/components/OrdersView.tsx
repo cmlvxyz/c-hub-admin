@@ -15,7 +15,7 @@ import {
   Trash2
 } from 'lucide-react';
 import { Order, OrderStatus } from '../types';
-import { formatPHP, statusColors, exportToCSV } from '../utils';
+import { formatPHP, statusColors, exportToCSV, getImageUrl } from '../utils';
 
 interface OrdersViewProps {
   orders: Order[];
@@ -452,7 +452,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                               >
                                 {item?.image ? (
                                   <img
-                                    src={item.image}
+                                    src={getImageUrl(item.image)}
                                     alt={item?.name || 'Item'}
                                     referrerPolicy="no-referrer"
                                     className="w-full h-full object-cover"

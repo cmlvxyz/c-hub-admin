@@ -25,7 +25,7 @@ import {
 } from './types';
 import { playNotificationChime } from './utils';
 
-const API_BASE_URL = 'http://localhost:3013';
+const API_BASE_URL = 'https://c-hub-backend-ijy4.onrender.com';
 
 const INITIAL_PRODUCTS: Product[] = [
   {
@@ -435,6 +435,31 @@ export function App() {
     setSelectedOrderForDetail(null);
   };
 
+  // ✅ Handle Delete Order - Permanent Delete
+  const handleDeleteOrder = async (orderId: string) => {
+    try {
+      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+        method: 'DELETE'
+      });
+      
+      if (response.ok) {
+        // ✅ I-remove ang order sa local state
+        setOrders(prev => prev.filter(o => o.orderId !== orderId));
+        console.log(`✅ Order ${orderId} deleted successfully`);
+        
+        if (soundEnabled) playNotificationChime('alert');
+        setLiveToast({
+          message: `Order #${orderId} deleted permanently`,
+          id: Date.now().toString()
+        });
+      } else {
+        console.error('❌ Failed to delete order:', response.status);
+      }
+    } catch (error) {
+      console.error('❌ Error deleting order:', error);
+    }
+  };
+
   // Product Actions
   const handleAddProduct = (productData: Partial<Product>) => {
     const newProd: Product = {
@@ -751,6 +776,7 @@ export function App() {
                 onOpenStoreModal={() => setIsStoreCheckoutOpen(true)}
                 searchFilter={searchGlobal}
                 setSearchFilter={setSearchGlobal}
+                onDeleteOrder={handleDeleteOrder}
               />
             )}
 

@@ -174,3 +174,20 @@ export const exportToCSV = (filename: string, rows: Record<string, any>[]) => {
   link.click();
   document.body.removeChild(link);
 };
+
+// ✅ Helper function para sa image URL
+export const getImageUrl = (path: string): string => {
+  if (!path) return '';
+  
+  // Kung may http na, ibalik na as-is
+  if (path.startsWith('http://') || path.startsWith('https://')) {
+    return path;
+  }
+  
+  // Kung nagsisimula sa /, idagdag ang base URL ng backend
+  if (path.startsWith('/')) {
+    return `https://c-hub-backend-ijy4.onrender.com${path}`;
+  }
+  
+  return path;
+};
