@@ -26,6 +26,7 @@ interface OrdersViewProps {
   onOpenStoreModal: () => void;
   searchFilter: string;
   setSearchFilter: (term: string) => void;
+  onDeleteOrder: (orderId: string) => Promise<void>; // ✅ IDAGDAG ITO
 }
 
 const statusTabs: Array<{ id: 'all' | 'ordered'; label: string; icon: any }> = [
@@ -41,7 +42,8 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
   onOpenPrintWaybillModal,
   onOpenStoreModal,
   searchFilter = '',
-  setSearchFilter
+  setSearchFilter,
+  onDeleteOrder // ✅ IDAGDAG ITO
 }) => {
   const [selectedStatusTab, setSelectedStatusTab] = useState<'all' | 'ordered'>('all');
   const [selectedChannel, setSelectedChannel] = useState<string>('all');
@@ -49,9 +51,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
   const [selectedOrderIds, setSelectedOrderIds] = useState<string[]>([]);
   const [bulkStatusToApply, setBulkStatusToApply] = useState<OrderStatus>('To Ship');
 
-  const [deletedOrderIds, setDeletedOrderIds] = useState<string[]>([]);
-
-  // ✅ GINAMIT NATIN YUNG FILTERED ORDERS PARA SA MGA COUNT
+  // ✅ FILTERED ORDERS - para sa table display
   const filteredOrders = useMemo(() => {
     const safeOrders = orders || [];
     
@@ -93,9 +93,17 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
       });
     }
 
-    // ✅ I-EXCLUDE YUNG MGA NA-DELETE NA ORDERS
-    return filtered.filter(order => !deletedOrderIds.includes(order.orderId));
-  }, [orders, selectedStatusTab, selectedChannel, selectedPayment, searchFilter, deletedOrderIds]);
+    return filtered;
+  }, [orders, selectedStatusTab, selectedChannel, selectedPayment, searchFilter]);
+
+  // ✅ COUNTS - GAMIT ANG ORIGINAL ORDERS, HINDI FILTERED
+  const safeOrders = orders || [];
+  const totalOrders = safeOrders.length;
+  const activeOrders = safeOrders.filter(o => o?.status !== 'Cancelled' && o?.status !== 'Completed').length;
+  const completedOrders = safeOrders.filter(o => o?.status === 'Completed').length;
+  const cancelledOrders = safeOrders.filter(o => o?.status === 'Cancelled').length;
+  const orderedCount = completedOrders + cancelledOrders;
+  const isOrderedTab = selectedStatusTab === 'ordered';
 
   const handleToggleSelectAll = () => {
     if (selectedStatusTab === 'ordered') return;
@@ -143,33 +151,21 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
     exportToCSV(`CHUB_Orders_${new Date().toISOString().split('T')[0]}`, rows);
   };
 
+  // ✅ HANDLE DELETE - PERMANENT DELETE
   const handleDeleteOrder = async (orderId: string) => {
-    // ✅ 1. Aalisin agad sa UI (Optimistic Update)
-    setDeletedOrderIds(prev => [...prev, orderId]);
+    // ✅ Kumpirmahin muna
+    if (!confirm(`Are you sure you want to delete order ${orderId}? This action cannot be undone.`)) {
+      return;
+    }
     
-    // ✅ 2. Saka natin i-fetch yung backend sa background
     try {
-      const response = await fetch(`https://c-hub-backend-ijy4.onrender.com/api/orders/${orderId}`, {
-        method: 'DELETE'
-      });
-      
-      if (response.ok) {
-        console.log(`✅ Deleted order ${orderId} from server`);
-      } else {
-        console.error('❌ Failed to delete from server:', response.status);
-      }
+      // ✅ Call the parent function to delete
+      await onDeleteOrder(orderId);
     } catch (error) {
       console.error('❌ Failed to delete order:', error);
+      alert('Failed to delete order. Please try again.');
     }
   };
-
-  // ✅ GAMITIN NATIN YUNG FILTERED ORDERS PARA SA MGA COUNT PARA BUMABA AGAD!
-  const totalOrders = filteredOrders.length;
-  const activeOrders = filteredOrders.filter(o => o?.status !== 'Cancelled' && o?.status !== 'Completed').length;
-  const completedOrders = filteredOrders.filter(o => o?.status === 'Completed').length;
-  const cancelledOrders = filteredOrders.filter(o => o?.status === 'Cancelled').length;
-  const orderedCount = completedOrders + cancelledOrders;
-  const isOrderedTab = selectedStatusTab === 'ordered';
 
   return (
     <div className="space-y-6">
@@ -194,7 +190,6 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
             <span>Export CSV</span>
           </button>
 
-          {/* ✅ TINANGGAL NA ANG TEST NEW ORDER PARA MISMONG USER NA ANG MAG-ORDER */}
           <button
             onClick={onOpenStoreModal}
             className="px-3.5 py-2 text-xs font-bold bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl transition-all shadow-md shadow-indigo-600/25 flex items-center gap-1.5"
@@ -210,6 +205,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
         <div className="flex items-center gap-1 min-w-max">
           {statusTabs.map(tab => {
             const Icon = tab.icon;
+            // ✅ TAMA NA ANG COUNT - GAMIT ANG ORIGINAL ORDERS
             const count = tab.id === 'all' ? activeOrders : orderedCount;
             const isActive = selectedStatusTab === tab.id;
 
@@ -363,7 +359,6 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                 {!isOrderedTab && (
                   <th className="px-3 py-2.5 text-right">Quick Action</th>
                 )}
-                {/* BAGONG HEADER PARA SA DELETE */}
                 <th className="px-3 py-2.5 text-right">Actions</th>
               </tr>
             </thead>
@@ -453,7 +448,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                         </div>
                       </td>
 
-                      {/* ✅ Items with Product Images */}
+                      {/* Items with Product Images */}
                       <td className="px-3 py-2.5">
                         <div className="flex items-center gap-2">
                           <div className="flex -space-x-2 shrink-0">
@@ -469,7 +464,6 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                                     referrerPolicy="no-referrer"
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
-                                      // ✅ PERMANENT FALLBACK IMAGE kapag nag-fail yung load
                                       e.currentTarget.src = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=200&auto=format&fit=crop&q=80';
                                     }}
                                   />
@@ -543,7 +537,6 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                       {!isOrderedTab && (
                         <td className="px-3 py-2.5 text-right">
                           <div className="flex items-center justify-end gap-1">
-
                             <select
                               value={order.status || 'To Ship'}
                               onChange={e => onUpdateStatus(order.orderId, e.target.value as OrderStatus)}
@@ -569,7 +562,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                         </td>
                       )}
 
-                      {/* BAGONG DELETE BUTTON (Nasa kanan) */}
+                      {/* Delete Button */}
                       <td className="px-3 py-2.5 text-right">
                         <button
                           onClick={() => handleDeleteOrder(order.orderId)}
