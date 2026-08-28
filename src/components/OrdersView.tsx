@@ -151,19 +151,12 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
     exportToCSV(`CHUB_Orders_${new Date().toISOString().split('T')[0]}`, rows);
   };
 
-  // ✅ HANDLE DELETE - PERMANENT DELETE
+  // ✅ HANDLE DELETE - PERMANENT DELETE, WALANG CONFIRMATION
   const handleDeleteOrder = async (orderId: string) => {
-    // ✅ Kumpirmahin muna
-    if (!confirm(`Are you sure you want to delete order ${orderId}? This action cannot be undone.`)) {
-      return;
-    }
-    
     try {
-      // ✅ Call the parent function to delete
       await onDeleteOrder(orderId);
     } catch (error) {
       console.error('❌ Failed to delete order:', error);
-      alert('Failed to delete order. Please try again.');
     }
   };
 
@@ -562,7 +555,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                         </td>
                       )}
 
-                      {/* Delete Button */}
+                      {/* Delete Button - Walang confirmation */}
                       <td className="px-3 py-2.5 text-right">
                         <button
                           onClick={() => handleDeleteOrder(order.orderId)}
