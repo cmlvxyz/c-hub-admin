@@ -452,11 +452,12 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                               >
                                 {item?.image ? (
                                   <img
-                                    src={getImageUrl(item.image)}
+                                    src={item.image}  // ✅ Directly use item.image (already has full URL from server)
                                     alt={item?.name || 'Item'}
                                     referrerPolicy="no-referrer"
                                     className="w-full h-full object-cover"
                                     onError={(e) => {
+                                      // Fallback image
                                       e.currentTarget.src = 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=200&auto=format&fit=crop&q=80';
                                     }}
                                   />

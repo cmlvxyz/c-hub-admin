@@ -175,11 +175,11 @@ export const exportToCSV = (filename: string, rows: Record<string, any>[]) => {
   document.body.removeChild(link);
 };
 
-// ✅ Helper function para sa image URL
+// ✅ Improved helper function para sa image URL
 export const getImageUrl = (path: string): string => {
   if (!path) return '';
   
-  // Kung may http na, ibalik na as-is
+  // Kung may http na, ibalik na as-is (already a full URL)
   if (path.startsWith('http://') || path.startsWith('https://')) {
     return path;
   }
@@ -189,5 +189,6 @@ export const getImageUrl = (path: string): string => {
     return `https://c-hub-backend-ijy4.onrender.com${path}`;
   }
   
-  return path;
+  // Kung relative path lang (walang /), idagdag ang base URL
+  return `https://c-hub-backend-ijy4.onrender.com/${path}`;
 };

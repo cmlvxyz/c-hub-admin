@@ -39,26 +39,8 @@ export const StoreCheckoutModal: React.FC<StoreCheckoutModalProps> = ({
   products,
   onCreateOrder
 }) => {
-  const [cart, setCart] = useState<CartItem[]>([
-    {
-      product: products[0] || {
-        id: 'prod-001',
-        sku: 'CHUB-HD-001',
-        name: 'C-HUB Signature Heavyweight Hoodie',
-        price: 1850,
-        costPrice: 920,
-        stock: 4,
-        image: 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&auto=format&fit=crop&q=80',
-        sizes: ['M', 'L', 'XL'],
-        colors: ['Onyx Black', 'Heather Ash'],
-        category: 'Apparel',
-        subCategory: 'Hoodies'
-      } as any,
-      qty: 1,
-      selectedSize: 'L',
-      selectedColor: 'Onyx Black'
-    }
-  ]);
+  // ✅ EMPTY CART - Walang default items
+  const [cart, setCart] = useState<CartItem[]>([]);
 
   const [customerName, setCustomerName] = useState('Edrian Dela Cruz');
   const [customerEmail, setCustomerEmail] = useState('edrian.delacruz@apcas.ph');
@@ -93,11 +75,15 @@ export const StoreCheckoutModal: React.FC<StoreCheckoutModalProps> = ({
         {
           product,
           qty: 1,
-          selectedSize: product.sizes[0] || 'Standard',
-          selectedColor: product.colors[0] || 'Default'
+          selectedSize: product.sizes?.[0] || 'Standard',
+          selectedColor: product.colors?.[0] || 'Default'
         }
       ];
     });
+  };
+
+  const handleRemoveFromCart = (productId: string) => {
+    setCart(prev => prev.filter(item => item.product.id !== productId));
   };
 
   const handleUpdateQty = (productId: string, delta: number) => {
@@ -332,6 +318,14 @@ export const StoreCheckoutModal: React.FC<StoreCheckoutModalProps> = ({
                           >
                             <Plus className="w-3 h-3" />
                           </button>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveFromCart(item.product.id)}
+                            className="p-1 rounded-md text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 transition-colors"
+                            title="Remove from cart"
+                          >
+                            <Trash2 className="w-3 h-3" />
+                          </button>
                         </div>
                       </div>
                     ))
@@ -347,7 +341,10 @@ export const StoreCheckoutModal: React.FC<StoreCheckoutModalProps> = ({
                         type="button"
                         key={p.id}
                         onClick={() => handleAddToCart(p)}
-                        className="p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 text-left transition-all flex items-center gap-2 group"
+                        disabled={p.stock === 0}
+                        className={`p-2 rounded-lg bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-indigo-500 text-left transition-all flex items-center gap-2 group ${
+                          p.stock === 0 ? 'opacity-50 cursor-not-allowed' : ''
+                        }`}
                       >
                         <img
                           src={p.image}

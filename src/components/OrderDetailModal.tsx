@@ -318,7 +318,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                     <div key={item.id || idx} className="py-2.5 flex items-center justify-between gap-3">
                       <div className="flex items-center gap-2.5 min-w-0">
                         <img
-                          src={item.image || ''}
+                          src={item.image}  // ✅ Directly use item.image (already has full URL from server)
                           alt={item.name || 'Item'}
                           referrerPolicy="no-referrer"
                           className="w-11 h-11 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0"

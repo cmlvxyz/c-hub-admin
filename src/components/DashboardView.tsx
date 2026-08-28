@@ -423,7 +423,7 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
                 <div key={prod?.id || Math.random()} className="py-3.5 flex items-center justify-between gap-4 hover:bg-slate-50 dark:hover:bg-slate-800/40 px-2 -mx-2 rounded-lg transition-colors">
                   <div className="flex items-center gap-3 min-w-0">
                     <img
-                      src={prod?.image || ''}
+                      src={prod?.image || ''}  // ✅ Use directly (already has full URL from server)
                       alt={prod?.name || ''}
                       referrerPolicy="no-referrer"
                       className="w-11 h-11 rounded-lg object-cover border border-slate-200 dark:border-slate-700 shrink-0"
