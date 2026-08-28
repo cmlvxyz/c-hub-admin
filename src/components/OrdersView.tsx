@@ -148,7 +148,7 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
     
     // ✅ 2. Saka natin i-fetch yung backend sa background
     try {
-      const response = await fetch(`http://localhost:3013/api/orders/${orderId}`, {
+      const response = await fetch(`https://c-hub-backend-ijy4.onrender.com/api/orders/${orderId}`, {
         method: 'DELETE'
       });
       
