@@ -24,7 +24,7 @@ import {
 } from './types';
 import { playNotificationChime } from './utils';
 
-const API_BASE_URL = 'https://c-hub-backend-ijy4.onrender.com';
+const API_BASE_URL = 'https://c-hub-backend-1jy4.onrender.com';
 
 const INITIAL_PRODUCTS: Product[] = [
   {

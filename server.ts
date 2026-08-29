@@ -164,7 +164,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Premium T-Shirt - White",
     price: 1999,
     stock: 50,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/men/t-shirts/white.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/white.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["White"],
     category: "Apparel",
@@ -188,7 +188,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Premium T-Shirt - Black",
     price: 1999,
     stock: 45,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/men/t-shirts/black.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/black.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Black"],
     category: "Apparel",
@@ -212,7 +212,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Premium T-Shirt - Blue",
     price: 1999,
     stock: 40,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/men/t-shirts/blue.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/blue.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Blue"],
     category: "Apparel",
@@ -236,7 +236,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Premium T-Shirt - Yellow",
     price: 1999,
     stock: 35,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/men/t-shirts/yellow.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/yellow.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Yellow"],
     category: "Apparel",
@@ -260,7 +260,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Premium T-Shirt - Red",
     price: 1999,
     stock: 30,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/men/t-shirts/red.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/red.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Red"],
     category: "Apparel",
@@ -284,7 +284,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Premium T-Shirt - Green",
     price: 1999,
     stock: 25,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/men/t-shirts/green.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/green.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Green"],
     category: "Apparel",
@@ -308,7 +308,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Cozy Hoodie - Beige",
     price: 2499,
     stock: 40,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/men/hoodie/beige.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/hoodie/beige.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Beige"],
     category: "Apparel",
@@ -332,7 +332,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Cozy Hoodie - Mauve",
     price: 2499,
     stock: 35,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/men/hoodie/mauve.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/hoodie/mauve.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Mauve"],
     category: "Apparel",
@@ -356,7 +356,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Cozy Hoodie - Pink",
     price: 2499,
     stock: 30,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/men/hoodie/pink.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/hoodie/pink.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Pink"],
     category: "Apparel",
@@ -380,7 +380,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Peplum Top - Cream",
     price: 1799,
     stock: 30,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/women/top/top1.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/top/top1.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Cream"],
     category: "Apparel",
@@ -404,7 +404,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Peplum Top - White",
     price: 1799,
     stock: 30,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/women/top/top2.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/top/top2.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["White"],
     category: "Apparel",
@@ -428,7 +428,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Peplum Top - Sky Blue Gingham",
     price: 1799,
     stock: 30,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/women/top/top3.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/top/top3.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Sky Blue Gingham"],
     category: "Apparel",
@@ -452,7 +452,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Summer Halter Dress - Polka White",
     price: 2999,
     stock: 25,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/women/dress/dress1.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/dress/dress1.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Polka White"],
     category: "Apparel",
@@ -476,7 +476,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Summer Halter Dress - Sky Stripe",
     price: 2999,
     stock: 25,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/clothes/women/dress/dress2.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/dress/dress2.png",
     sizes: ["S", "M", "L", "XL"],
     colors: ["Sky Stripe"],
     category: "Apparel",
@@ -500,7 +500,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Classic Denim Jeans - Light Stone",
     price: 1799,
     stock: 40,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/pants/men/pants/pants1.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/pants/men/pants/pants1.png",
     sizes: ["28", "30", "32", "34", "36"],
     colors: ["Light Stone"],
     category: "Apparel",
@@ -524,7 +524,7 @@ const DEFAULT_PRODUCTS: Product[] = [
     name: "Classic Denim Jeans - Mid Gray",
     price: 1799,
     stock: 35,
-    image: "https://c-hub-backend-ijy4.onrender.com/images/pants/men/pants/pants2.png",
+    image: "https://c-hub-backend-1jy4.onrender.com/images/pants/men/pants/pants2.png",
     sizes: ["28", "30", "32", "34", "36"],
     colors: ["Mid Gray"],
     category: "Apparel",
@@ -608,7 +608,7 @@ function enrichOrderItemsWithImages(order: Order): Order {
     return order;
   }
   
-  const BASE_URL = 'https://c-hub-backend-ijy4.onrender.com';
+  const BASE_URL = 'https://c-hub-backend-1jy4.onrender.com';
   
   const enrichedItems = order.items.map(item => {
     // Kung may image na, i-convert sa full URL
@@ -743,7 +743,7 @@ app.post('/api/orders/sync', (req, res) => {
 
 // ✅ Create order
 app.post('/api/orders', (req, res) => {
-  const BASE_URL = 'https://c-hub-backend-ijy4.onrender.com';
+  const BASE_URL = 'https://c-hub-backend-1jy4.onrender.com';
   
   const newOrder: Order = {
     ...req.body,
@@ -820,7 +820,7 @@ app.patch('/api/orders/:id', (req, res) => {
   // I-enrich ang items
   orders[index].items = orders[index].items.map(item => {
     if (item.image && !item.image.startsWith('http://') && !item.image.startsWith('https://')) {
-      return { ...item, image: `https://c-hub-backend-ijy4.onrender.com${item.image}` };
+      return { ...item, image: `https://c-hub-backend-1jy4.onrender.com${item.image}` };
     }
     return item;
   });

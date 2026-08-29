@@ -186,9 +186,9 @@ export const getImageUrl = (path: string): string => {
   
   // Kung nagsisimula sa /, idagdag ang base URL ng backend
   if (path.startsWith('/')) {
-    return `https://c-hub-backend-ijy4.onrender.com${path}`;
+    return `https://c-hub-backend-1jy4.onrender.com${path}`;
   }
   
   // Kung relative path lang (walang /), idagdag ang base URL
-  return `https://c-hub-backend-ijy4.onrender.com/${path}`;
+  return `https://c-hub-backend-1jy4.onrender.com/${path}`;
 };

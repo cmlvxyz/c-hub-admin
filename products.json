@@ -1,0 +1,644 @@
+[
+  {
+    "id": "clothes-men-tshirt-White-XL",
+    "sku": "CHUB-TEE-001",
+    "barcode": "480651234001",
+    "name": "Premium T-Shirt - White",
+    "price": 1999,
+    "stock": 50,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/white.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "White"
+    ],
+    "category": "Apparel",
+    "subCategory": "T-Shirts",
+    "costPrice": 800,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 14,
+    "updatedAt": "2026-08-29T05:20:07.299Z"
+  },
+  {
+    "id": "clothes-men-tshirt-Black-XL",
+    "sku": "CHUB-TEE-002",
+    "barcode": "480651234002",
+    "name": "Premium T-Shirt - Black",
+    "price": 1999,
+    "stock": 45,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/black.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Black"
+    ],
+    "category": "Apparel",
+    "subCategory": "T-Shirts",
+    "costPrice": 800,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 12,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-men-tshirt-Blue-XL",
+    "sku": "CHUB-TEE-003",
+    "barcode": "480651234003",
+    "name": "Premium T-Shirt - Blue",
+    "price": 1999,
+    "stock": 40,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/blue.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Blue"
+    ],
+    "category": "Apparel",
+    "subCategory": "T-Shirts",
+    "costPrice": 800,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 10,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-men-tshirt-Yellow-XL",
+    "sku": "CHUB-TEE-004",
+    "barcode": "480651234004",
+    "name": "Premium T-Shirt - Yellow",
+    "price": 1999,
+    "stock": 35,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/yellow.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Yellow"
+    ],
+    "category": "Apparel",
+    "subCategory": "T-Shirts",
+    "costPrice": 800,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 8,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-men-tshirt-Red-XL",
+    "sku": "CHUB-TEE-005",
+    "barcode": "480651234005",
+    "name": "Premium T-Shirt - Red",
+    "price": 1999,
+    "stock": 30,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/red.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Red"
+    ],
+    "category": "Apparel",
+    "subCategory": "T-Shirts",
+    "costPrice": 800,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 6,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-men-tshirt-Green-XL",
+    "sku": "CHUB-TEE-006",
+    "barcode": "480651234006",
+    "name": "Premium T-Shirt - Green",
+    "price": 1999,
+    "stock": 25,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/t-shirts/green.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Green"
+    ],
+    "category": "Apparel",
+    "subCategory": "T-Shirts",
+    "costPrice": 800,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 5,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-men-hoodie-Beige-XL",
+    "sku": "CHUB-HD-001",
+    "barcode": "480651234007",
+    "name": "Cozy Hoodie - Beige",
+    "price": 2499,
+    "stock": 40,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/hoodie/beige.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Beige"
+    ],
+    "category": "Apparel",
+    "subCategory": "Hoodies & Sweats",
+    "costPrice": 1200,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 12,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-men-hoodie-Mauve-XL",
+    "sku": "CHUB-HD-002",
+    "barcode": "480651234008",
+    "name": "Cozy Hoodie - Mauve",
+    "price": 2499,
+    "stock": 35,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/hoodie/mauve.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Mauve"
+    ],
+    "category": "Apparel",
+    "subCategory": "Hoodies & Sweats",
+    "costPrice": 1200,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 10,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-men-hoodie-Pink-XL",
+    "sku": "CHUB-HD-003",
+    "barcode": "480651234009",
+    "name": "Cozy Hoodie - Pink",
+    "price": 2499,
+    "stock": 30,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/men/hoodie/pink.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Pink"
+    ],
+    "category": "Apparel",
+    "subCategory": "Hoodies & Sweats",
+    "costPrice": 1200,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 8,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-women-top-Cream-S",
+    "sku": "CHUB-WTOP-001",
+    "barcode": "480651234010",
+    "name": "Peplum Top - Cream",
+    "price": 1799,
+    "stock": 30,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/top/top1.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Cream"
+    ],
+    "category": "Apparel",
+    "subCategory": "Top",
+    "costPrice": 800,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 8,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-women-top-White-S",
+    "sku": "CHUB-WTOP-002",
+    "barcode": "480651234011",
+    "name": "Peplum Top - White",
+    "price": 1799,
+    "stock": 30,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/top/top2.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "White"
+    ],
+    "category": "Apparel",
+    "subCategory": "Top",
+    "costPrice": 800,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 7,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-women-top-Sky Blue Gingham-S",
+    "sku": "CHUB-WTOP-003",
+    "barcode": "480651234012",
+    "name": "Peplum Top - Sky Blue Gingham",
+    "price": 1799,
+    "stock": 30,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/top/top3.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Sky Blue Gingham"
+    ],
+    "category": "Apparel",
+    "subCategory": "Top",
+    "costPrice": 800,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 5
+    },
+    "salesVelocity7d": 6,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-women-dress-Polka White-S",
+    "sku": "CHUB-WDRS-001",
+    "barcode": "480651234013",
+    "name": "Summer Halter Dress - Polka White",
+    "price": 2999,
+    "stock": 25,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/dress/dress1.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Polka White"
+    ],
+    "category": "Apparel",
+    "subCategory": "Dress",
+    "costPrice": 1500,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 7
+    },
+    "salesVelocity7d": 6,
+    "updatedAt": "2026-08-29T05:20:07.300Z"
+  },
+  {
+    "id": "clothes-women-dress-Sky Stripe-S",
+    "sku": "CHUB-WDRS-002",
+    "barcode": "480651234014",
+    "name": "Summer Halter Dress - Sky Stripe",
+    "price": 2999,
+    "stock": 25,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/clothes/women/dress/dress2.png",
+    "sizes": [
+      "S",
+      "M",
+      "L",
+      "XL"
+    ],
+    "colors": [
+      "Sky Stripe"
+    ],
+    "category": "Apparel",
+    "subCategory": "Dress",
+    "costPrice": 1500,
+    "brand": "C-HUB Originals",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Metro Garments Corp.",
+      "contact": "supply@metrogarments.ph",
+      "leadTimeDays": 7
+    },
+    "salesVelocity7d": 5,
+    "updatedAt": "2026-08-29T05:20:07.301Z"
+  },
+  {
+    "id": "clothes-men-pants-Light Stone-28",
+    "sku": "CHUB-PANTS-001",
+    "barcode": "480651234015",
+    "name": "Classic Denim Jeans - Light Stone",
+    "price": 1799,
+    "stock": 40,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/pants/men/pants/pants1.png",
+    "sizes": [
+      "28",
+      "30",
+      "32",
+      "34",
+      "36"
+    ],
+    "colors": [
+      "Light Stone"
+    ],
+    "category": "Apparel",
+    "subCategory": "Jeans",
+    "costPrice": 900,
+    "brand": "C-HUB Street",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Apex Textile Works",
+      "contact": "sales@apextextile.ph",
+      "leadTimeDays": 7
+    },
+    "salesVelocity7d": 12,
+    "updatedAt": "2026-08-29T05:20:07.301Z"
+  },
+  {
+    "id": "clothes-men-pants-Mid Gray-28",
+    "sku": "CHUB-PANTS-002",
+    "barcode": "480651234016",
+    "name": "Classic Denim Jeans - Mid Gray",
+    "price": 1799,
+    "stock": 35,
+    "image": "https://c-hub-backend-1jy4.onrender.com/images/pants/men/pants/pants2.png",
+    "sizes": [
+      "28",
+      "30",
+      "32",
+      "34",
+      "36"
+    ],
+    "colors": [
+      "Mid Gray"
+    ],
+    "category": "Apparel",
+    "subCategory": "Jeans",
+    "costPrice": 900,
+    "brand": "C-HUB Street",
+    "reservedStock": 0,
+    "lowStockThreshold": 10,
+    "reorderPoint": 15,
+    "reorderQty": 50,
+    "status": "In Stock",
+    "channelSync": {
+      "web": true,
+      "shopee": true,
+      "lazada": true,
+      "tiktok": true
+    },
+    "supplier": {
+      "name": "Apex Textile Works",
+      "contact": "sales@apextextile.ph",
+      "leadTimeDays": 7
+    },
+    "salesVelocity7d": 10,
+    "updatedAt": "2026-08-29T05:20:07.301Z"
+  }
+]
