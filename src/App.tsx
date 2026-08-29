@@ -20,7 +20,6 @@ import {
   PurchaseOrder,
   Review,
   PaymentGatewayConfig,
-  DashboardAnalytics,
   OrderStatus
 } from './types';
 import { playNotificationChime } from './utils';
@@ -150,8 +149,6 @@ const INITIAL_PRODUCTS: Product[] = [
   }
 ];
 
-// ✅ TANGGALIN ang INITIAL_ORDERS - kukunin na lang mula sa server
-
 const INITIAL_GATEWAYS: PaymentGatewayConfig[] = [
   {
     id: 'gcash',
@@ -225,6 +222,92 @@ const INITIAL_REVIEWS: Review[] = [
   }
 ];
 
+// ✅ Function para i-normalize ang order structure (Store + Backend format support)
+const normalizeOrder = (o: any): Order => {
+  const paymentMethod = typeof o.payment === 'string'
+    ? o.payment
+    : o.payment?.method || 'Cash on Delivery';
+
+  const isPaid = typeof o.payment === 'object'
+    ? o.payment?.status === 'Paid'
+    : o.status === 'Completed' || o.isPaid || false;
+
+  const rawTotal = Number(o.total ?? o.subtotal ?? 0);
+  const rawSubtotal = Number(o.subtotal ?? o.total ?? 0);
+  const rawCost = Number(o.costTotal ?? (rawTotal ? rawTotal * 0.5 : 0));
+
+  return {
+    ...o,
+    orderId: o.orderId || o.id || `CHUB-${Math.floor(100000 + Math.random() * 900000)}`,
+    orderNumber: o.orderNumber || `${Math.floor(1000 + Math.random() * 9000)}`,
+    date: o.date || new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }),
+    total: rawTotal,
+    subtotal: rawSubtotal,
+    costTotal: rawCost,
+    shipping: Number(o.shipping || 0),
+    discount: Number(o.discount || 0),
+    discountCode: o.discountCode || '',
+    tax: Number(o.tax || 0),
+    status: o.status || 'To Ship',
+    channel: o.channel || 'Online Store',
+    customer: {
+      id: o.customer?.id || 'cust-1',
+      name: o.customer?.name || o.customerName || 'Valued Customer',
+      email: o.customer?.email || o.customerEmail || 'customer@chub.ph',
+      phone: o.customer?.phone || o.customerPhone || '09123456789',
+      address: o.customer?.address || o.shippingAddress?.address || 'Metro Manila',
+      city: o.customer?.city || o.shippingAddress?.city || 'Manila',
+      province: o.customer?.province || 'Metro Manila',
+      postalCode: o.customer?.postalCode || '1000',
+      tier: o.customer?.tier || (rawTotal > 4000 ? 'VIP' : 'Standard'),
+      totalOrders: o.customer?.totalOrders || 1,
+      totalSpent: o.customer?.totalSpent || rawTotal
+    },
+    payment: {
+      method: paymentMethod as any,
+      status: isPaid ? 'Paid' : 'Pending',
+      transactionId: o.payment?.transactionId || `TXN-${Date.now()}`,
+      paidAt: o.payment?.paidAt || (isPaid ? new Date().toISOString() : undefined),
+      fee: o.payment?.fee || Math.round(rawTotal * 0.015)
+    },
+    fulfillment: {
+      carrier: o.fulfillment?.carrier || 'J&T Express',
+      trackingNumber: o.fulfillment?.trackingNumber || o.trackingNumber || `JT-PH-${Math.floor(100000000 + Math.random() * 900000000)}`,
+      estimatedDelivery: o.fulfillment?.estimatedDelivery || '2-3 Business Days',
+      timeline: o.fulfillment?.timeline || [
+        {
+          status: 'Order Placed & Confirmed',
+          time: new Date().toLocaleTimeString(),
+          location: 'C-HUB Central Store',
+          note: `Payment authorized via ${paymentMethod}`,
+          completed: true
+        }
+      ]
+    },
+    items: (o.items || []).map((item: any, idx: number) => {
+      let img = item.image || '';
+      if (img && !img.startsWith('http://') && !img.startsWith('https://')) {
+        img = `${API_BASE_URL}${img.startsWith('/') ? '' : '/'}${img}`;
+      }
+      return {
+        ...item,
+        id: item.id || item.productId || `item-${idx}`,
+        productId: item.productId || item.id || `prod-${idx}`,
+        sku: item.sku || 'CHUB-SKU',
+        name: item.name || 'Product Item',
+        price: Number(item.price || 0),
+        costPrice: Number(item.costPrice || item.price * 0.5 || 0),
+        qty: Number(item.qty || item.quantity || 1),
+        image: img || 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?w=500&auto=format&fit=crop&q=80',
+        size: item.size || 'XL',
+        color: item.color || 'Standard',
+        subCategory: item.subCategory || 'Apparel'
+      };
+    }),
+    updatedAt: o.updatedAt || new Date().toISOString()
+  };
+};
+
 // ✅ Function para mag-load ng orders mula sa server
 const loadOrdersFromServer = async (): Promise<Order[]> => {
   try {
@@ -233,7 +316,7 @@ const loadOrdersFromServer = async (): Promise<Order[]> => {
       const serverOrders = await response.json();
       if (Array.isArray(serverOrders)) {
         console.log(`📦 Loaded ${serverOrders.length} orders from server`);
-        return serverOrders;
+        return serverOrders.map(normalizeOrder);
       }
     }
     return [];
@@ -255,7 +338,7 @@ export function App() {
   const [isSidebarCollapsed, setIsSidebarCollapsed] = useState<boolean>(false);
   const [isMobileSidebarOpen, setIsMobileSidebarOpen] = useState<boolean>(false);
 
-  // ✅ Data Store States - walang INITIAL_ORDERS
+  // Data Store States
   const [orders, setOrders] = useState<Order[]>([]);
   const [products, setProducts] = useState<Product[]>(INITIAL_PRODUCTS);
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
@@ -266,9 +349,7 @@ export function App() {
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState<Order | null>(null);
   const [selectedOrderForWaybill, setSelectedOrderForWaybill] = useState<Order | null>(null);
   const [isNewProductOpen, setIsNewProductOpen] = useState<boolean>(false);
-  const [selectedProductForStockAdjust, setSelectedProductForStockAdjust] = useState<Product | null>(
-    null
-  );
+  const [selectedProductForStockAdjust, setSelectedProductForStockAdjust] = useState<Product | null>(null);
   const [isStoreCheckoutOpen, setIsStoreCheckoutOpen] = useState<boolean>(false);
 
   // Live Toast & Status
@@ -278,23 +359,101 @@ export function App() {
   const [soundEnabled, setSoundEnabled] = useState<boolean>(true);
   const [searchGlobal, setSearchGlobal] = useState<string>('');
 
-  // ✅ Auto-refresh orders from server every 5 seconds
-  useEffect(() => {
-    const refreshOrders = async () => {
+  // Fetch initial data
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
       const serverOrders = await loadOrdersFromServer();
-      if (serverOrders.length > 0 || orders.length > 0) {
+      setOrders(serverOrders);
+
+      if (API_BASE_URL) {
+        const [prodRes, revRes, gwRes] = await Promise.all([
+          fetch(`${API_BASE_URL}/api/products`).then(r => (r.ok ? r.json() : null)),
+          fetch(`${API_BASE_URL}/api/reviews`).then(r => (r.ok ? r.json() : null)),
+          fetch(`${API_BASE_URL}/api/gateways`).then(r => (r.ok ? r.json() : null))
+        ]);
+
+        if (prodRes && Array.isArray(prodRes) && prodRes.length > 0) setProducts(prodRes);
+        if (revRes && Array.isArray(revRes) && revRes.length > 0) setReviews(revRes);
+        if (gwRes && Array.isArray(gwRes) && gwRes.length > 0) setGateways(gwRes);
+      }
+      setIsLiveConnected(true);
+    } catch (err) {
+      console.warn('Backend connect notice:', err);
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
+  // ✅ Real-time SSE Event Source & Auto Polling
+  useEffect(() => {
+    fetchData();
+
+    // 1. Setup SSE stream for instant real-time updates
+    let eventSource: EventSource | null = null;
+    try {
+      eventSource = new EventSource(`${API_BASE_URL}/api/orders/stream/public`);
+
+      eventSource.addEventListener('new-order', (event: any) => {
+        try {
+          const rawOrder = JSON.parse(event.data);
+          const newNormalizedOrder = normalizeOrder(rawOrder);
+          setOrders(prev => [newNormalizedOrder, ...prev.filter(o => o.orderId !== newNormalizedOrder.orderId)]);
+          if (soundEnabled) playNotificationChime('order');
+          setLiveToast({
+            message: `⚡ New Order #${newNormalizedOrder.orderId} received! Total: ₱${newNormalizedOrder.total.toLocaleString()}`,
+            id: Date.now().toString()
+          });
+        } catch (err) {
+          console.error('Error parsing SSE new-order:', err);
+        }
+      });
+
+      eventSource.addEventListener('order-updated', (event: any) => {
+        try {
+          const rawOrder = JSON.parse(event.data);
+          const updated = normalizeOrder(rawOrder);
+          setOrders(prev => prev.map(o => o.orderId === updated.orderId ? updated : o));
+        } catch (err) {
+          console.error('Error parsing SSE order-updated:', err);
+        }
+      });
+
+      eventSource.addEventListener('order-deleted', (event: any) => {
+        try {
+          const { orderId } = JSON.parse(event.data);
+          setOrders(prev => prev.filter(o => o.orderId !== orderId));
+        } catch (err) {}
+      });
+
+      eventSource.onerror = () => {
+        setIsLiveConnected(false);
+      };
+
+      eventSource.onopen = () => {
+        setIsLiveConnected(true);
+      };
+    } catch (e) {
+      console.warn('SSE not initialized:', e);
+    }
+
+    // 2. Background Polling every 5 seconds (Safety net)
+    const interval = setInterval(async () => {
+      const serverOrders = await loadOrdersFromServer();
+      if (serverOrders.length > 0) {
         setOrders(serverOrders);
       }
+    }, 5000);
+
+    return () => {
+      clearInterval(interval);
+      if (eventSource) eventSource.close();
     };
-    
-    refreshOrders();
-    const interval = setInterval(refreshOrders, 5000);
-    return () => clearInterval(interval);
-  }, []);
+  }, [fetchData, soundEnabled]);
 
   // Compute live stock alerts from product stock
   const stockAlerts: StockAlert[] = products
-    .filter(p => p.stock <= p.lowStockThreshold)
+    .filter(p => p && p.stock <= p.lowStockThreshold)
     .map(p => ({
       id: `alert-${p.id}`,
       productId: p.id,
@@ -325,39 +484,6 @@ export function App() {
       localStorage.setItem('chub_theme', 'light');
     }
   }, [isDarkMode]);
-
-  // ✅ Fetch from backend API
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
-    try {
-      // ✅ Load orders from server
-      const serverOrders = await loadOrdersFromServer();
-      if (serverOrders.length > 0) {
-        setOrders(serverOrders);
-      }
-      
-      if (API_BASE_URL) {
-        const [prodRes, revRes, gwRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/products`).then(r => (r.ok ? r.json() : null)),
-          fetch(`${API_BASE_URL}/api/reviews`).then(r => (r.ok ? r.json() : null)),
-          fetch(`${API_BASE_URL}/api/gateways`).then(r => (r.ok ? r.json() : null))
-        ]);
-
-        if (prodRes && Array.isArray(prodRes) && prodRes.length > 0) setProducts(prodRes);
-        if (revRes && Array.isArray(revRes) && revRes.length > 0) setReviews(revRes);
-        if (gwRes && Array.isArray(gwRes) && gwRes.length > 0) setGateways(gwRes);
-      }
-      setIsLiveConnected(true);
-    } catch {
-      // Keep local state
-    } finally {
-      setIsLoading(false);
-    }
-  }, []);
-
-  useEffect(() => {
-    fetchData();
-  }, [fetchData]);
 
   // Auto clear toast
   useEffect(() => {
@@ -396,14 +522,12 @@ export function App() {
       })
     );
 
-    // ✅ I-sync sa server
-    if (orders.find(o => o.orderId === orderId)) {
-      fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      }).catch(err => console.error('Failed to sync order status:', err));
-    }
+    // Sync to backend server
+    fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ status })
+    }).catch(err => console.error('Failed to sync order status:', err));
 
     if (selectedOrderForDetail?.orderId === orderId) {
       setSelectedOrderForDetail(prev => (prev ? { ...prev, status } : null));
@@ -420,6 +544,15 @@ export function App() {
     setOrders((prev: Order[]) =>
       prev.map(o => (orderIds.includes(o.orderId) ? { ...o, status, updatedAt: new Date().toISOString() } : o))
     );
+
+    orderIds.forEach(id => {
+      fetch(`${API_BASE_URL}/api/orders/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ status })
+      }).catch(() => {});
+    });
+
     if (soundEnabled) playNotificationChime('order');
     setLiveToast({
       message: `Updated status to "${status}" for ${orderIds.length} orders`,
@@ -435,28 +568,21 @@ export function App() {
     setSelectedOrderForDetail(null);
   };
 
-  // ✅ Handle Delete Order - Permanent Delete
   const handleDeleteOrder = async (orderId: string) => {
     try {
       const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
         method: 'DELETE'
       });
-      
       if (response.ok) {
-        // ✅ I-remove ang order sa local state
         setOrders(prev => prev.filter(o => o.orderId !== orderId));
-        console.log(`✅ Order ${orderId} deleted successfully`);
-        
         if (soundEnabled) playNotificationChime('alert');
         setLiveToast({
           message: `Order #${orderId} deleted permanently`,
           id: Date.now().toString()
         });
-      } else {
-        console.error('❌ Failed to delete order:', response.status);
       }
     } catch (error) {
-      console.error('❌ Error deleting order:', error);
+      console.error('Error deleting order:', error);
     }
   };
 
@@ -653,49 +779,25 @@ export function App() {
     });
   };
 
-  // Create Order Simulator
+  // Create Order from Admin Simulator
   const handleCreateOrder = async (orderPayload: any): Promise<boolean> => {
-    const newOrder: Order = {
-      ...orderPayload,
-      orderId: orderPayload.orderId || `CHUB-ORD-${Math.floor(1000 + Math.random() * 9000)}`,
-      orderNumber: `${Math.floor(8900 + orders.length + 1)}`,
-      date: 'Just now',
-      updatedAt: new Date().toISOString()
-    };
+    const normalized = normalizeOrder(orderPayload);
 
-    // Auto-decrement inventory stock
-    setProducts(prev =>
-      prev.map(prod => {
-        const matchingItem = newOrder.items.find(i => i.productId === prod.id);
-        if (matchingItem) {
-          const newStock = Math.max(0, prod.stock - matchingItem.qty);
-          return {
-            ...prod,
-            stock: newStock,
-            status: newStock === 0 ? 'Out of Stock' : newStock <= prod.lowStockThreshold ? 'Low Stock' : 'In Stock',
-            salesVelocity7d: (prod.salesVelocity7d || 0) + matchingItem.qty
-          };
-        }
-        return prod;
-      })
-    );
+    setOrders(prev => [normalized, ...prev]);
 
-    setOrders(prev => [newOrder, ...prev]);
-    
-    // ✅ I-sync sa server
     try {
       await fetch(`${API_BASE_URL}/api/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(newOrder)
+        body: JSON.stringify(normalized)
       });
     } catch (error) {
       console.error('Failed to sync order to server:', error);
     }
-    
+
     if (soundEnabled) playNotificationChime('order');
     setLiveToast({
-      message: `⚡ New Order #${newOrder.orderId} placed via ${newOrder.payment.method}!`,
+      message: `⚡ New Order #${normalized.orderId} placed via ${normalized.payment.method}!`,
       id: Date.now().toString()
     });
     return true;
