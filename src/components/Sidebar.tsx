@@ -155,8 +155,8 @@ export const Sidebar: React.FC<SidebarProps> = ({
           {/* Mobile Drawer Header with Close Button */}
           <div className="lg:hidden flex items-center justify-between p-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50">
             <div className="flex items-center gap-2.5">
-              <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-indigo-600 text-white shadow-sm">
-                <Box className="w-4 h-4 stroke-[2.5]" />
+              <div className="flex h-8 w-8 items-center justify-center">
+                <Box className="w-4 h-4 stroke-[2.5] text-indigo-600" />
               </div>
               <span className="font-extrabold text-base text-slate-900 dark:text-white">
                 Navigation Menu
