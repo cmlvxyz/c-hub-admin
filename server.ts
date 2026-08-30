@@ -4,7 +4,7 @@ import { createServer as createViteServer } from 'vite';
 import fs from 'fs';
 
 const app = express();
-const PORT = 3014;
+const PORT = 3005;
 
 // ✅ CORS
 app.use((req, res, next) => {

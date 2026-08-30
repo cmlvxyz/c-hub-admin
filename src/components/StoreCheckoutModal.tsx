@@ -42,13 +42,13 @@ export const StoreCheckoutModal: React.FC<StoreCheckoutModalProps> = ({
   // ✅ EMPTY CART - Walang default items
   const [cart, setCart] = useState<CartItem[]>([]);
 
-  const [customerName, setCustomerName] = useState('Edrian Dela Cruz');
-  const [customerEmail, setCustomerEmail] = useState('edrian.delacruz@apcas.ph');
-  const [customerPhone, setCustomerPhone] = useState('+63 917 888 5432');
-  const [customerAddress, setCustomerAddress] = useState('Unit 1204 Grand Riviera Suites, Roxas Blvd');
-  const [customerCity, setCustomerCity] = useState('Manila');
-  const [customerProvince, setCustomerProvince] = useState('Metro Manila');
-  const [customerPostal, setCustomerPostal] = useState('1000');
+  const [customerName, setCustomerName] = useState('');
+  const [customerEmail, setCustomerEmail] = useState('');
+  const [customerPhone, setCustomerPhone] = useState('');
+  const [customerAddress, setCustomerAddress] = useState('');
+  const [customerCity, setCustomerCity] = useState('');
+  const [customerProvince, setCustomerProvince] = useState('');
+  const [customerPostal, setCustomerPostal] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<PaymentMethod>('GCash');
   const [channel, setChannel] = useState<SalesChannel>('Online Store');
   const [discountCode, setDiscountCode] = useState('CHUBVIP');
