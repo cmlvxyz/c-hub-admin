@@ -102,7 +102,7 @@ export const Navbar: React.FC<NavbarProps> = ({
           {/* Brand Logo & Name */}
           <div className="flex items-center gap-2.5 min-w-0 shrink-0">
             <div className="flex h-9 w-9 items-center justify-center shrink-0">
-              <Box className="w-5 h-5 stroke-[2.5] text-indigo-600" />
+              <Box className="w-10 h-10 stroke-[2.5] text-indigo-600" />
             </div>
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 leading-tight">
