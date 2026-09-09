@@ -11,19 +11,7 @@ const turso = createClient({
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
-// ✅ ADD THIS: Root route para hindi "Cannot GET /"
-app.get('/', (req, res) => {
-  res.json({
-    name: 'C-HUB Admin API',
-    version: '1.0.0',
-    status: 'running',
-    endpoints: [
-      '/api/health',
-      '/api/orders',
-      '/api/auth/admin/bootstrap'
-    ]
-  });
-});
+// ❌ REMOVE THIS: app.get('/', ...)
 
 // Health check
 app.get('/api/health', async (req, res) => {
