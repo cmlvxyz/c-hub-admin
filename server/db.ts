@@ -4,11 +4,23 @@
 // schema so they read and write the SAME database.
 
 import { createClient, type Client } from '@libsql/client';
-import productsSeeds from './seeds/products.seed.json';
-import ordersSeeds from './seeds/orders.seed.json';
-import usersSeeds from './seeds/users.seed.json';
-import reviewsSeeds from './seeds/reviews.seed.json';
-import vouchersSeeds from './seeds/vouchers.seed.json';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import path from 'node:path';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+const loadSeed = (filename: string): any[] => {
+  const filePath = path.join(__dirname, 'seeds', filename);
+  return JSON.parse(readFileSync(filePath, 'utf-8'));
+};
+
+const productsSeeds = loadSeed('products.seed.json');
+const ordersSeeds = loadSeed('orders.seed.json');
+const usersSeeds = loadSeed('users.seed.json');
+const reviewsSeeds = loadSeed('reviews.seed.json');
+const vouchersSeeds = loadSeed('vouchers.seed.json');
 
 export const DATABASE_URL =
   process.env.DATABASE_URL ||
