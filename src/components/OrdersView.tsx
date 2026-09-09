@@ -299,11 +299,15 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                   onChange={e => setBulkStatusToApply(e.target.value as OrderStatus)}
                   className="px-3 py-1.5 text-xs bg-white dark:bg-slate-800 border border-indigo-300 dark:border-indigo-700 rounded-xl font-bold text-slate-900 dark:text-white"
                 >
+                  <option value="Pending">Move to: Pending</option>
                   <option value="To Ship">Move to: To Ship</option>
                   <option value="Shipped">Move to: Shipped</option>
                   <option value="Out for Delivery">Move to: Out for Delivery</option>
                   <option value="Delivered">Move to: Delivered</option>
+                  <option value="To Review">Move to: To Review</option>
                   <option value="Completed">Move to: Completed</option>
+                  <option value="Refunded">Move to: Refunded</option>
+                  <option value="Returned">Move to: Returned</option>
                   <option value="Cancelled">Move to: Cancelled</option>
                 </select>
 
@@ -536,13 +540,17 @@ export const OrdersView: React.FC<OrdersViewProps> = ({
                               onChange={e => onUpdateStatus(order.orderId, e.target.value as OrderStatus)}
                               className="px-1.5 py-0.5 rounded-md text-[10px] font-bold bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-200 focus:outline-none focus:ring-1 focus:ring-indigo-500 cursor-pointer"
                             >
-                              <option value="To Pay">To Pay</option>
+                              <option value="Pending">Pending</option>
                               <option value="To Ship">To Ship</option>
                               <option value="Shipped">Shipped</option>
                               <option value="Out for Delivery">Out for Delivery</option>
                               <option value="Delivered">Delivered</option>
                               <option value="To Review">To Review</option>
                               <option value="Completed">Completed</option>
+                              <option value="Refund Requested">Refund Requested</option>
+                              <option value="Refunded">Refunded</option>
+                              <option value="Return Requested">Return Requested</option>
+                              <option value="Returned">Returned</option>
                               <option value="Cancelled">Cancelled</option>
                             </select>
 

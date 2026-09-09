@@ -8,11 +8,15 @@ import { StockAlertsView } from './components/StockAlertsView';
 import { PaymentGatewaysView } from './components/PaymentGatewaysView';
 import { ReportsView } from './components/ReportsView';
 import { CustomerReviewsView } from './components/CustomerReviewsView';
+import { VouchersView } from './components/VouchersView';
 import { OrderDetailModal } from './components/OrderDetailModal';
 import { PrintWaybillModal } from './components/PrintWaybillModal';
 import { NewProductModal } from './components/NewProductModal';
 import { StockAdjustmentModal } from './components/StockAdjustmentModal';
+import { InventoryHistoryModal } from './components/InventoryHistoryModal';
 import { StoreCheckoutModal } from './components/StoreCheckoutModal';
+import { TeamView } from './components/TeamView';
+import { AuditLogsView } from './components/AuditLogsView';
 import {
   Order,
   Product,
@@ -20,11 +24,16 @@ import {
   PurchaseOrder,
   Review,
   PaymentGatewayConfig,
-  OrderStatus
+  OrderStatus,
+  Voucher,
+  AdminAccount,
+  RoleDef,
+  AuditLog
 } from './types';
 import { playNotificationChime } from './utils';
+import { API_BASE, bootstrapAdminSession, adminFetch, adminSSEUrl, getAdminToken } from './service/adminApi';
 
-const API_BASE_URL = 'https://c-hub-backend-1jy4.onrender.com';
+const API_BASE_URL = API_BASE;
 
 const INITIAL_PRODUCTS: Product[] = [
   {
@@ -308,10 +317,36 @@ const normalizeOrder = (o: any): Order => {
   };
 };
 
+// ✅ I-map ang backend product (computed stockStatus) papunta sa admin Product shape.
+const normalizeProduct = (p: any): Product => ({
+  id: p.id,
+  sku: p.sku || '',
+  barcode: p.barcode || '',
+  name: p.name || 'Product',
+  category: p.category || 'Apparel',
+  subCategory: p.subCategory || 'General',
+  brand: p.brand || '',
+  price: Number(p.price) || 0,
+  costPrice: Number(p.costPrice) || 0,
+  stock: Number(p.stock) || 0,
+  reservedStock: Number(p.reservedStock) || 0,
+  lowStockThreshold: Number(p.lowStockThreshold) || 10,
+  reorderPoint: Number(p.reorderPoint) || 15,
+  reorderQty: Number(p.reorderQty) || 50,
+  status: (p.stockStatus || (Number(p.stock) === 0 ? 'Out of Stock' : Number(p.stock) <= Number(p.lowStockThreshold) ? 'Low Stock' : 'In Stock')) as Product['status'],
+  image: p.image || '',
+  sizes: Array.isArray(p.sizes) ? p.sizes : [],
+  colors: Array.isArray(p.colors) ? p.colors : [],
+  channelSync: p.channelSync || { web: false, shopee: false, lazada: false, tiktok: false },
+  supplier: p.supplier || { name: '', contact: '', leadTimeDays: 0 },
+  salesVelocity7d: Number(p.salesVelocity7d) || 0,
+  updatedAt: p.updatedAt || new Date().toISOString()
+});
+
 // ✅ Function para mag-load ng orders mula sa server
 const loadOrdersFromServer = async (): Promise<Order[]> => {
   try {
-    const response = await fetch(`${API_BASE_URL}/api/orders`);
+    const response = await adminFetch(`${API_BASE_URL}/api/orders`);
     if (response.ok) {
       const serverOrders = await response.json();
       if (Array.isArray(serverOrders)) {
@@ -344,12 +379,17 @@ export function App() {
   const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([]);
   const [reviews, setReviews] = useState<Review[]>(INITIAL_REVIEWS);
   const [gateways, setGateways] = useState<PaymentGatewayConfig[]>(INITIAL_GATEWAYS);
+  const [vouchers, setVouchers] = useState<Voucher[]>([]);
+  const [admins, setAdmins] = useState<AdminAccount[]>([]);
+  const [roleDefs, setRoleDefs] = useState<RoleDef[]>([]);
+  const [auditLogs, setAuditLogs] = useState<AuditLog[]>([]);
 
   // Modal States
   const [selectedOrderForDetail, setSelectedOrderForDetail] = useState<Order | null>(null);
   const [selectedOrderForWaybill, setSelectedOrderForWaybill] = useState<Order | null>(null);
   const [isNewProductOpen, setIsNewProductOpen] = useState<boolean>(false);
   const [selectedProductForStockAdjust, setSelectedProductForStockAdjust] = useState<Product | null>(null);
+  const [isInventoryHistoryOpen, setIsInventoryHistoryOpen] = useState<boolean>(false);
   const [isStoreCheckoutOpen, setIsStoreCheckoutOpen] = useState<boolean>(false);
 
   // Live Toast & Status
@@ -367,15 +407,29 @@ export function App() {
       setOrders(serverOrders);
 
       if (API_BASE_URL) {
-        const [prodRes, revRes, gwRes] = await Promise.all([
-          fetch(`${API_BASE_URL}/api/products`).then(r => (r.ok ? r.json() : null)),
-          fetch(`${API_BASE_URL}/api/reviews`).then(r => (r.ok ? r.json() : null)),
-          fetch(`${API_BASE_URL}/api/gateways`).then(r => (r.ok ? r.json() : null))
+        const [prodRes, revRes, gwRes, vouchRes] = await Promise.all([
+          adminFetch(`${API_BASE_URL}/api/products`).then(r => (r.ok ? r.json() : null)),
+          adminFetch(`${API_BASE_URL}/api/admin/reviews`).then(r => (r.ok ? r.json() : null)),
+          adminFetch(`${API_BASE_URL}/api/gateways`).then(r => (r.ok ? r.json() : null)),
+          adminFetch(`${API_BASE_URL}/api/vouchers`).then(r => (r.ok ? r.json() : null))
         ]);
 
-        if (prodRes && Array.isArray(prodRes) && prodRes.length > 0) setProducts(prodRes);
+        if (prodRes && Array.isArray(prodRes) && prodRes.length > 0) setProducts(prodRes.map(normalizeProduct));
         if (revRes && Array.isArray(revRes) && revRes.length > 0) setReviews(revRes);
         if (gwRes && Array.isArray(gwRes) && gwRes.length > 0) setGateways(gwRes);
+        if (vouchRes && Array.isArray(vouchRes)) setVouchers(vouchRes);
+
+        // Team & roles (RBAC) — susubukan kahit limited ang role; 403 = walang access.
+        const [adminsRes, rolesRes] = await Promise.all([
+          adminFetch(`${API_BASE_URL}/api/admin/admins`).then(r => (r.ok ? r.json() : null)),
+          adminFetch(`${API_BASE_URL}/api/admin/roles`).then(r => (r.ok ? r.json() : null))
+        ]);
+        if (Array.isArray(adminsRes)) setAdmins(adminsRes);
+        if (rolesRes?.roles) setRoleDefs(rolesRes.roles);
+
+        // Audit trail (audit.view) — 403 = walang access, huwag ipakita.
+        const auditRes = await adminFetch(`${API_BASE_URL}/api/admin/audit`).then(r => (r.ok ? r.json() : null));
+        if (auditRes?.logs && Array.isArray(auditRes.logs)) setAuditLogs(auditRes.logs);
       }
       setIsLiveConnected(true);
     } catch (err) {
@@ -387,58 +441,80 @@ export function App() {
 
   // ✅ Real-time SSE Event Source & Auto Polling
   useEffect(() => {
-    fetchData();
-
-    // 1. Setup SSE stream for instant real-time updates
     let eventSource: EventSource | null = null;
-    try {
-      eventSource = new EventSource(`${API_BASE_URL}/api/orders/stream/public`);
+    let cancelled = false;
 
-      eventSource.addEventListener('new-order', (event: any) => {
-        try {
-          const rawOrder = JSON.parse(event.data);
-          const newNormalizedOrder = normalizeOrder(rawOrder);
-          setOrders(prev => [newNormalizedOrder, ...prev.filter(o => o.orderId !== newNormalizedOrder.orderId)]);
-          if (soundEnabled) playNotificationChime('order');
-          setLiveToast({
-            message: `⚡ New Order #${newNormalizedOrder.orderId} received! Total: ₱${newNormalizedOrder.total.toLocaleString()}`,
-            id: Date.now().toString()
-          });
-        } catch (err) {
-          console.error('Error parsing SSE new-order:', err);
-        }
-      });
+    // 1. Bootstrap admin session (auto-login), then load initial data
+    (async () => {
+      await bootstrapAdminSession();
+      if (cancelled) return;
+      await fetchData();
 
-      eventSource.addEventListener('order-updated', (event: any) => {
-        try {
-          const rawOrder = JSON.parse(event.data);
-          const updated = normalizeOrder(rawOrder);
-          setOrders(prev => prev.map(o => o.orderId === updated.orderId ? updated : o));
-        } catch (err) {
-          console.error('Error parsing SSE order-updated:', err);
-        }
-      });
+      // 2. Setup SSE stream for instant real-time updates (?token= query param)
+      try {
+        eventSource = new EventSource(adminSSEUrl('/api/orders/stream/public'));
 
-      eventSource.addEventListener('order-deleted', (event: any) => {
-        try {
-          const { orderId } = JSON.parse(event.data);
-          setOrders(prev => prev.filter(o => o.orderId !== orderId));
-        } catch (err) {}
-      });
+        eventSource.addEventListener('new-order', (event: any) => {
+          try {
+            const rawOrder = JSON.parse(event.data);
+            const newNormalizedOrder = normalizeOrder(rawOrder);
+            setOrders(prev => [newNormalizedOrder, ...prev.filter(o => o.orderId !== newNormalizedOrder.orderId)]);
+            if (soundEnabled) playNotificationChime('order');
+            setLiveToast({
+              message: `⚡ New Order #${newNormalizedOrder.orderId} received! Total: ₱${newNormalizedOrder.total.toLocaleString()}`,
+              id: Date.now().toString()
+            });
+          } catch (err) {
+            console.error('Error parsing SSE new-order:', err);
+          }
+        });
 
-      eventSource.onerror = () => {
-        setIsLiveConnected(false);
-      };
+        eventSource.addEventListener('order-updated', (event: any) => {
+          try {
+            const rawOrder = JSON.parse(event.data);
+            const updated = normalizeOrder(rawOrder);
+            setOrders(prev => prev.map(o => o.orderId === updated.orderId ? updated : o));
+          } catch (err) {
+            console.error('Error parsing SSE order-updated:', err);
+          }
+        });
 
-      eventSource.onopen = () => {
-        setIsLiveConnected(true);
-      };
-    } catch (e) {
-      console.warn('SSE not initialized:', e);
-    }
+        eventSource.addEventListener('order-deleted', (event: any) => {
+          try {
+            const { orderId } = JSON.parse(event.data);
+            setOrders(prev => prev.filter(o => o.orderId !== orderId));
+          } catch (err) {}
+        });
 
-    // 2. Background Polling every 5 seconds (Safety net)
+        eventSource.addEventListener('vouchers-updated', (event: any) => {
+          try {
+            const payload = JSON.parse(event.data);
+            if (payload?.deleted) {
+              setVouchers(prev => prev.filter(v => v.code !== payload.code));
+            } else if (payload?.id) {
+              setVouchers(prev => {
+                const exists = prev.some(v => v.id === payload.id);
+                return exists ? prev.map(v => (v.id === payload.id ? payload : v)) : [payload, ...prev];
+              });
+            }
+          } catch (err) {}
+        });
+
+        eventSource.onerror = () => {
+          setIsLiveConnected(false);
+        };
+
+        eventSource.onopen = () => {
+          setIsLiveConnected(true);
+        };
+      } catch (e) {
+        console.warn('SSE not initialized:', e);
+      }
+    })();
+
+    // 3. Background Polling every 5 seconds (Safety net)
     const interval = setInterval(async () => {
+      if (!getAdminToken()) return;
       const serverOrders = await loadOrdersFromServer();
       if (serverOrders.length > 0) {
         setOrders(serverOrders);
@@ -446,6 +522,7 @@ export function App() {
     }, 5000);
 
     return () => {
+      cancelled = true;
       clearInterval(interval);
       if (eventSource) eventSource.close();
     };
@@ -493,8 +570,32 @@ export function App() {
     }
   }, [liveToast]);
 
-  // Order Actions
-  const handleUpdateOrderStatus = (orderId: string, status: OrderStatus, note?: string) => {
+  // Order Actions — ang backend ang siyang nagpapatunay ng bawat transition.
+  const handleUpdateOrderStatus = async (orderId: string, status: OrderStatus, note?: string) => {
+    let failureMessage = '';
+    try {
+      const response = await adminFetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({ status, note })
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        failureMessage = body?.error || `Transition to "${status}" was rejected by the backend.`;
+      }
+    } catch (error) {
+      console.error('Failed to sync order status:', error);
+      failureMessage = 'Network error while updating order status.';
+    }
+
+    if (failureMessage) {
+      // I-revert sa totoong server state
+      const serverOrders = await loadOrdersFromServer();
+      if (serverOrders.length > 0) setOrders(serverOrders);
+      setLiveToast({ message: `⚠️ ${failureMessage}`, id: Date.now().toString() });
+      return;
+    }
+
     setOrders((prev: Order[]) =>
       prev.map(o => {
         if (o.orderId === orderId) {
@@ -522,15 +623,8 @@ export function App() {
       })
     );
 
-    // Sync to backend server
-    fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    }).catch(err => console.error('Failed to sync order status:', err));
-
     if (selectedOrderForDetail?.orderId === orderId) {
-      setSelectedOrderForDetail(prev => (prev ? { ...prev, status } : null));
+      setSelectedOrderForDetail(prev => (prev ? { ...prev, status, updatedAt: new Date().toISOString() } : null));
     }
 
     if (soundEnabled) playNotificationChime('order');
@@ -540,24 +634,81 @@ export function App() {
     });
   };
 
-  const handleBulkUpdateStatus = (orderIds: string[], status: OrderStatus) => {
-    setOrders((prev: Order[]) =>
-      prev.map(o => (orderIds.includes(o.orderId) ? { ...o, status, updatedAt: new Date().toISOString() } : o))
+  const applyOrderDecision = async (
+    orderId: string,
+    endpoint: 'refund-decision' | 'return-decision',
+    payload: { approve: boolean; amount?: number; method?: string; note?: string }
+  ): Promise<boolean> => {
+    try {
+      const response = await adminFetch(`${API_BASE_URL}/api/admin/orders/${orderId}/${endpoint}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) {
+        setLiveToast({ message: `⚠️ ${data?.error || 'Decision rejected by the backend.'}`, id: Date.now().toString() });
+        const serverOrders = await loadOrdersFromServer();
+        if (serverOrders.length > 0) setOrders(serverOrders);
+        return false;
+      }
+      if (data?.order) {
+        setOrders(prev => prev.map(o => (o.orderId === orderId ? data.order : o)));
+        if (selectedOrderForDetail?.orderId === orderId) setSelectedOrderForDetail(data.order);
+      }
+      if (soundEnabled) playNotificationChime('order');
+      setLiveToast({ message: `Order #${orderId} ${payload.approve ? 'approved' : 'denied'} (${endpoint.replace('-decision', '')})`, id: Date.now().toString() });
+      return true;
+    } catch (error) {
+      console.error(`Failed to apply ${endpoint}:`, error);
+      setLiveToast({ message: 'Network error while processing decision.', id: Date.now().toString() });
+      return false;
+    }
+  };
+
+  const handleRefundDecision = (orderId: string, payload: { approve: boolean; amount?: number; method?: string; note?: string }) =>
+    applyOrderDecision(orderId, 'refund-decision', payload);
+
+  const handleReturnDecision = (orderId: string, payload: { approve: boolean; note?: string }) =>
+    applyOrderDecision(orderId, 'return-decision', payload);
+
+  const handleBulkUpdateStatus = async (orderIds: string[], status: OrderStatus) => {
+    const results = await Promise.all(
+      orderIds.map(async id => {
+        try {
+          const response = await adminFetch(`${API_BASE_URL}/api/orders/${id}`, {
+            method: 'PATCH',
+            headers: { 'Content-Type': 'application/json'},
+            body: JSON.stringify({ status })
+          });
+          return response.ok ? 'ok' : 'rejected';
+        } catch {
+          return 'error';
+        }
+      })
     );
 
-    orderIds.forEach(id => {
-      fetch(`${API_BASE_URL}/api/orders/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status })
-      }).catch(() => {});
-    });
+    const failed = orderIds.filter((_, i) => results[i] !== 'ok');
+    if (failed.length > 0) {
+      setLiveToast({
+        message: `⚠️ Backend rejected the move to "${status}" for ${failed.length} order(s) — valid order flow rules were applied.`,
+        id: Date.now().toString()
+      });
+    }
+
+    setOrders((prev: Order[]) =>
+      prev.map(o => (orderIds.includes(o.orderId) && results[orderIds.indexOf(o.orderId)] === 'ok'
+        ? { ...o, status, updatedAt: new Date().toISOString() }
+        : o))
+    );
 
     if (soundEnabled) playNotificationChime('order');
-    setLiveToast({
-      message: `Updated status to "${status}" for ${orderIds.length} orders`,
-      id: Date.now().toString()
-    });
+    if (failed.length === 0) {
+      setLiveToast({
+        message: `Updated status to "${status}" for ${orderIds.length} orders`,
+        id: Date.now().toString()
+      });
+    }
   };
 
   const handleSelectOrder = (order: Order) => {
@@ -570,8 +721,8 @@ export function App() {
 
   const handleDeleteOrder = async (orderId: string) => {
     try {
-      const response = await fetch(`${API_BASE_URL}/api/orders/${orderId}`, {
-        method: 'DELETE'
+      const response = await adminFetch(`${API_BASE_URL}/api/orders/${orderId}`, {
+        method: 'DELETE',
       });
       if (response.ok) {
         setOrders(prev => prev.filter(o => o.orderId !== orderId));
@@ -586,56 +737,76 @@ export function App() {
     }
   };
 
-  // Product Actions
-  const handleAddProduct = (productData: Partial<Product>) => {
-    const newProd: Product = {
-      id: `prod-${Date.now()}`,
-      sku: productData.sku || `CHUB-${Date.now().toString().slice(-4)}`,
-      barcode: productData.barcode || '480651239999',
-      name: productData.name || 'New Product',
-      category: productData.category || 'Apparel',
-      subCategory: productData.subCategory || 'General',
-      brand: productData.brand || 'C-HUB Originals',
-      price: productData.price || 1200,
-      costPrice: productData.costPrice || 600,
-      stock: productData.stock || 25,
-      reservedStock: 0,
-      lowStockThreshold: productData.lowStockThreshold || 10,
-      reorderPoint: productData.reorderPoint || 15,
-      reorderQty: productData.reorderQty || 50,
-      status: (productData.stock || 25) > 10 ? 'In Stock' : 'Low Stock',
-      image: productData.image || 'https://images.unsplash.com/photo-1556905055-8f358a7a47b2?w=500&auto=format&fit=crop&q=80',
-      sizes: productData.sizes || ['M', 'L'],
-      colors: productData.colors || ['Black'],
-      channelSync: productData.channelSync || { web: true, shopee: true, lazada: true, tiktok: true },
-      supplier: productData.supplier || { name: 'Metro Garments Corp.', contact: 'supply@metrogarments.ph', leadTimeDays: 5 },
-      salesVelocity7d: 5,
-      updatedAt: new Date().toISOString()
-    };
+  // Product Actions — lahat ng writes ay dumadaan sa backend (single source of truth).
+  const handleAddProduct = async (productData: Partial<Product>) => {
+    const name = productData.name || 'New Product';
+    const price = Number(productData.price) || 0;
+    let failureMessage = '';
+    try {
+      const response = await adminFetch(`${API_BASE_URL}/api/products`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({
+          id: productData.id || `prod-${Date.now()}`,
+          sku: productData.sku,
+          name,
+          category: productData.category,
+          subCategory: productData.subCategory,
+          price,
+          originalPrice: price,
+          brand: productData.brand,
+          image: productData.image,
+          sizes: productData.sizes,
+          stock: productData.stock,
+          lowStockThreshold: productData.lowStockThreshold,
+          user: 'admin'
+        })
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        failureMessage = body?.error || 'Failed to create product on the backend.';
+      }
+    } catch (error) {
+      console.error('Failed to sync new product:', error);
+      failureMessage = 'Network error while creating product.';
+    }
 
-    setProducts(prev => [newProd, ...prev]);
+    if (failureMessage) {
+      setLiveToast({ message: `⚠️ ${failureMessage}`, id: Date.now().toString() });
+      return;
+    }
+
+    await fetchData();
     if (soundEnabled) playNotificationChime('success');
     setLiveToast({
-      message: `New SKU ${newProd.name} added to catalog!`,
+      message: `New SKU ${name} added to catalog!`,
       id: Date.now().toString()
     });
   };
 
-  const handleAdjustStock = (productId: string, adjustment: number, reason: string) => {
-    setProducts(prev =>
-      prev.map(p => {
-        if (p.id === productId) {
-          const newStock = Math.max(0, p.stock + adjustment);
-          return {
-            ...p,
-            stock: newStock,
-            status: newStock === 0 ? 'Out of Stock' : newStock <= p.lowStockThreshold ? 'Low Stock' : 'In Stock',
-            updatedAt: new Date().toISOString()
-          };
-        }
-        return p;
-      })
-    );
+  const handleAdjustStock = async (productId: string, adjustment: number, reason: string) => {
+    let failureMessage = '';
+    try {
+      const response = await adminFetch(`${API_BASE_URL}/api/products/${encodeURIComponent(productId)}/adjust`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({ adjustment, reason, user: 'admin' })
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        failureMessage = body?.error || 'Stock adjustment was rejected by the backend.';
+      }
+    } catch (error) {
+      console.error('Failed to sync stock adjustment:', error);
+      failureMessage = 'Network error while adjusting stock.';
+    }
+
+    if (failureMessage) {
+      setLiveToast({ message: `⚠️ ${failureMessage}`, id: Date.now().toString() });
+      return;
+    }
+
+    await fetchData();
     if (soundEnabled) playNotificationChime('alert');
     setLiveToast({
       message: `Stock updated (${adjustment > 0 ? `+${adjustment}` : adjustment}): ${reason}`,
@@ -664,8 +835,29 @@ export function App() {
     );
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    setProducts(prev => prev.filter(p => p.id !== productId));
+  const handleDeleteProduct = async (productId: string) => {
+    let failureMessage = '';
+    try {
+      const response = await adminFetch(`${API_BASE_URL}/api/products/${encodeURIComponent(productId)}`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({ user: 'admin' })
+      });
+      if (!response.ok) {
+        const body = await response.json().catch(() => ({}));
+        failureMessage = body?.error || 'Product deletion was rejected by the backend.';
+      }
+    } catch (error) {
+      console.error('Error deleting product:', error);
+      failureMessage = 'Network error while deleting product.';
+    }
+
+    if (failureMessage) {
+      setLiveToast({ message: `⚠️ ${failureMessage}`, id: Date.now().toString() });
+      return;
+    }
+
+    await fetchData();
     setLiveToast({
       message: 'Product removed from catalog',
       id: Date.now().toString()
@@ -760,23 +952,220 @@ export function App() {
 
   // Customer Reviews
   const handleReplyReview = (reviewId: string, replyText: string) => {
-    setReviews(prev =>
-      prev.map(r =>
-        r.id === reviewId
-          ? {
-              ...r,
-              adminReply: {
-                comment: replyText,
-                date: 'Just now'
+    const applyReply = (date: string) => {
+      setReviews(prev =>
+        prev.map(r =>
+          r.id === reviewId
+            ? {
+                ...r,
+                adminReply: {
+                  comment: replyText,
+                  date: date || 'Just now'
+                }
               }
-            }
-          : r
-      )
-    );
+            : r
+        )
+      );
+    };
+
+    applyReply(new Date().toLocaleString());
     setLiveToast({
       message: 'Official merchant response published',
       id: Date.now().toString()
     });
+
+    adminFetch(`${API_BASE_URL}/api/admin/reviews/${reviewId}`, {
+      method: 'PATCH',
+      headers: { 'Content-Type': 'application/json'},
+      body: JSON.stringify({
+        adminReply: { comment: replyText }
+      })
+    }).catch(err => console.warn('Failed to sync admin reply:', err));
+  };
+
+  // Moderate review status (approve / hide / reject)
+  const handleModerateReview = async (reviewId: string, status: 'published' | 'hidden' | 'rejected') => {
+    try {
+      const res = await adminFetch(`${API_BASE_URL}/api/admin/reviews/${reviewId}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify({ status })
+      });
+      if (res.ok) {
+        setReviews(prev => prev.map(r => (r.id === reviewId ? { ...r, status } : r)));
+        setLiveToast({
+          message: `Review ${status === 'published' ? 'approved' : status === 'hidden' ? 'hidden' : 'rejected'}`,
+          id: Date.now().toString()
+        });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setLiveToast({ message: data?.error || 'Failed to moderate review', id: Date.now().toString() });
+      }
+    } catch (err) {
+      console.warn('Moderation failed:', err);
+    }
+  };
+
+  // Hard delete review
+  const handleDeleteReview = async (reviewId: string) => {
+    if (!window.confirm('Permanently delete this review?')) return;
+    try {
+      const res = await adminFetch(`${API_BASE_URL}/api/admin/reviews/${reviewId}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setReviews(prev => prev.filter(r => r.id !== reviewId));
+        setLiveToast({ message: 'Review deleted', id: Date.now().toString() });
+      } else {
+        const data = await res.json().catch(() => ({}));
+        setLiveToast({ message: data?.error || 'Failed to delete review', id: Date.now().toString() });
+      }
+    } catch (err) {
+      console.warn('Delete review failed:', err);
+    }
+  };
+
+  // Create voucher (admin)
+  const handleCreateVoucher = async (payload: Partial<Voucher>): Promise<boolean> => {
+    try {
+      const res = await adminFetch(`${API_BASE_URL}/api/vouchers`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.voucher) {
+        setVouchers(prev => [data.voucher, ...prev.filter(v => v.id !== data.voucher.id)]);
+        setLiveToast({ message: `Voucher ${data.voucher.code} created`, id: Date.now().toString() });
+        return true;
+      }
+      setLiveToast({ message: data?.error || 'Failed to create voucher', id: Date.now().toString() });
+      return false;
+    } catch (err) {
+      console.warn('Create voucher failed:', err);
+      return false;
+    }
+  };
+
+  // Update voucher (admin)
+  const handleUpdateVoucher = async (code: string, payload: Partial<Voucher>): Promise<boolean> => {
+    try {
+      const res = await adminFetch(`${API_BASE_URL}/api/vouchers/${encodeURIComponent(code)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.voucher) {
+        setVouchers(prev => prev.map(v => (v.id === data.voucher.id ? data.voucher : v)));
+        setLiveToast({ message: `Voucher ${data.voucher.code} updated`, id: Date.now().toString() });
+        return true;
+      }
+      setLiveToast({ message: data?.error || 'Failed to update voucher', id: Date.now().toString() });
+      return false;
+    } catch (err) {
+      console.warn('Update voucher failed:', err);
+      return false;
+    }
+  };
+
+  // Toggle active status (admin)
+  const handleToggleVoucher = async (code: string, active: boolean): Promise<boolean> => {
+    return handleUpdateVoucher(code, { active });
+  };
+
+  // Delete voucher (admin)
+  const handleDeleteVoucher = async (code: string): Promise<boolean> => {
+    if (!window.confirm(`Permanently delete voucher ${code}?`)) return false;
+    try {
+      const res = await adminFetch(`${API_BASE_URL}/api/vouchers/${encodeURIComponent(code)}`, {
+        method: 'DELETE',
+      });
+      if (res.ok) {
+        setVouchers(prev => prev.filter(v => v.code !== code));
+        setLiveToast({ message: `Voucher ${code} deleted`, id: Date.now().toString() });
+        return true;
+      }
+      const data = await res.json().catch(() => ({}));
+      setLiveToast({ message: data?.error || 'Failed to delete voucher', id: Date.now().toString() });
+      return false;
+    } catch (err) {
+      console.warn('Delete voucher failed:', err);
+      return false;
+    }
+  };
+
+  // ---- RBAC: Admin team management (Super Admin lang) ----
+  const refreshAdmins = async () => {
+    try {
+      const res = await adminFetch(`${API_BASE_URL}/api/admin/admins`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data)) setAdmins(data);
+      }
+    } catch (err) {
+      console.warn('Failed to load admins:', err);
+    }
+  };
+
+  const roleLabel = (role: string) => roleDefs.find(r => r.key === role)?.label || role;
+
+  const handleCreateAdmin = async (payload: { name: string; username: string; email: string; password: string; role: string }): Promise<boolean> => {
+    try {
+      const res = await adminFetch(`${API_BASE_URL}/api/admin/admins`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.admin) {
+        setAdmins(prev => [data.admin, ...prev.filter(a => a.email !== data.admin.email)]);
+        setLiveToast({ message: `${data.admin.name} added as ${roleLabel(data.admin.role)}`, id: Date.now().toString() });
+        return true;
+      }
+      setLiveToast({ message: data?.error || 'Failed to create admin', id: Date.now().toString() });
+      return false;
+    } catch (err) {
+      console.warn('Create admin failed:', err);
+      setLiveToast({ message: 'Network error while creating admin.', id: Date.now().toString() });
+      return false;
+    }
+  };
+
+  const handleUpdateAdmin = async (email: string, payload: { name?: string; role?: string; active?: boolean; password?: string }): Promise<boolean> => {
+    try {
+      const res = await adminFetch(`${API_BASE_URL}/api/admin/admins/${encodeURIComponent(email)}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json'},
+        body: JSON.stringify(payload)
+      });
+      const data = await res.json().catch(() => ({}));
+      if (res.ok && data?.admin) {
+        setAdmins(prev => prev.map(a => (a.email === data.admin.email ? data.admin : a)));
+        const verb = payload.active === false ? 'deactivated' : 'updated';
+        setLiveToast({ message: `Admin ${data.admin.email} ${verb}`, id: Date.now().toString() });
+        return true;
+      }
+      setLiveToast({ message: data?.error || 'Failed to update admin', id: Date.now().toString() });
+      return false;
+    } catch (err) {
+      console.warn('Update admin failed:', err);
+      setLiveToast({ message: 'Network error while updating admin.', id: Date.now().toString() });
+      return false;
+    }
+  };
+
+  // ---- Audit trail (Feature #9) ----
+  const refreshAuditLogs = async () => {
+    try {
+      const res = await adminFetch(`${API_BASE_URL}/api/admin/audit`);
+      if (res.ok) {
+        const data = await res.json();
+        if (Array.isArray(data?.logs)) setAuditLogs(data.logs);
+      }
+    } catch (err) {
+      console.warn('Failed to load audit logs:', err);
+    }
   };
 
   // Create Order from Admin Simulator
@@ -786,7 +1175,7 @@ export function App() {
     setOrders(prev => [normalized, ...prev]);
 
     try {
-      await fetch(`${API_BASE_URL}/api/orders`, {
+      await adminFetch(`${API_BASE_URL}/api/orders`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(normalized)
@@ -804,7 +1193,7 @@ export function App() {
   };
 
   const pendingOrdersCount = orders.filter(
-    o => o.status === 'To Ship' || o.status === 'To Pay'
+    o => o.status === 'Pending' || o.status === 'To Ship'
   ).length;
   const activeAlertsCount = stockAlerts.length;
 
@@ -889,6 +1278,7 @@ export function App() {
                 onOpenStockAdjustModal={(prod: Product) => setSelectedProductForStockAdjust(prod)}
                 onToggleChannelSync={handleToggleChannelSync}
                 onDeleteProduct={handleDeleteProduct}
+                onOpenHistory={() => setIsInventoryHistoryOpen(true)}
               />
             )}
 
@@ -920,6 +1310,36 @@ export function App() {
                 reviews={reviews}
                 orders={orders}
                 onReplyReview={handleReplyReview}
+                onModerateReview={handleModerateReview}
+                onDeleteReview={handleDeleteReview}
+              />
+            )}
+
+            {activeTab === 'vouchers' && (
+              <VouchersView
+                vouchers={vouchers}
+                onCreateVoucher={handleCreateVoucher}
+                onUpdateVoucher={handleUpdateVoucher}
+                onToggleVoucher={handleToggleVoucher}
+                onDeleteVoucher={handleDeleteVoucher}
+              />
+            )}
+
+            {activeTab === 'team' && (
+              <TeamView
+                admins={admins}
+                roleDefs={roleDefs}
+                currentEmail=""
+                onCreateAdmin={handleCreateAdmin}
+                onUpdateAdmin={handleUpdateAdmin}
+                onRefresh={refreshAdmins}
+              />
+            )}
+
+            {activeTab === 'audit' && (
+              <AuditLogsView
+                logs={auditLogs}
+                onRefresh={refreshAuditLogs}
               />
             )}
           </div>
@@ -948,6 +1368,8 @@ export function App() {
           order={selectedOrderForDetail}
           onClose={handleCloseOrderDetail}
           onUpdateStatus={handleUpdateOrderStatus}
+          onRefundDecision={handleRefundDecision}
+          onReturnDecision={handleReturnDecision}
           onOpenPrintWaybillModal={(order: Order) => {
             setSelectedOrderForDetail(null);
             setSelectedOrderForWaybill(order);
@@ -978,6 +1400,13 @@ export function App() {
           onAdjustStock={handleAdjustStock}
         />
       )}
+
+      {/* Inventory History Modal */}
+      <InventoryHistoryModal
+        apiBase={API_BASE_URL}
+        isOpen={isInventoryHistoryOpen}
+        onClose={() => setIsInventoryHistoryOpen(false)}
+      />
 
       {/* Store Checkout Modal */}
       <StoreCheckoutModal

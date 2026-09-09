@@ -54,7 +54,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   searchGlobal = '',
   setSearchGlobal = (_term: string) => {},
   onToggleMobileSidebar = () => {},
-  isMobileSidebarOpen = false
+  isMobileSidebarOpen = false,
 }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [currentTime, setCurrentTime] = useState('');
@@ -77,7 +77,7 @@ export const Navbar: React.FC<NavbarProps> = ({
   }, []);
 
   const criticalAlerts = (stockAlerts || []).filter(a => a.severity === 'critical');
-  const pendingOrders = (orders || []).filter(o => o.status === 'To Ship' || o.status === 'To Pay');
+  const pendingOrders = (orders || []).filter(o => o.status === 'Pending' || o.status === 'To Ship');
 
   return (
     <header className="sticky top-0 z-50 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 transition-colors duration-200 shadow-sm">

@@ -14,7 +14,8 @@ import {
   ExternalLink,
   Package,
   TrendingUp,
-  RefreshCw
+  RefreshCw,
+  History
 } from 'lucide-react';
 import { Product } from '../types';
 import { formatPHP, exportToCSV } from '../utils';
@@ -25,6 +26,7 @@ interface InventoryViewProps {
   onOpenStockAdjustModal: (product: Product) => void;
   onToggleChannelSync: (productId: string, channel: 'web' | 'shopee' | 'lazada' | 'tiktok') => void;
   onDeleteProduct: (productId: string) => void;
+  onOpenHistory: () => void;
 }
 
 export const InventoryView: React.FC<InventoryViewProps> = ({
@@ -32,7 +34,8 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
   onOpenNewProductModal,
   onOpenStockAdjustModal,
   onToggleChannelSync,
-  onDeleteProduct
+  onDeleteProduct,
+  onOpenHistory
 }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [categoryFilter, setCategoryFilter] = useState('all');
@@ -115,6 +118,13 @@ export const InventoryView: React.FC<InventoryViewProps> = ({
         </div>
 
         <div className="flex flex-wrap items-center gap-2">
+          <button
+            onClick={onOpenHistory}
+            className="px-3.5 py-2 text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-all shadow-sm flex items-center gap-1.5"
+          >
+            <History className="w-3.5 h-3.5 text-indigo-600 dark:text-indigo-400" />
+            <span>History</span>
+          </button>
           <button
             onClick={handleExportCSV}
             className="px-3.5 py-2 text-xs font-semibold bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-700 border border-slate-200 dark:border-slate-700 rounded-lg transition-all shadow-sm flex items-center gap-1.5"

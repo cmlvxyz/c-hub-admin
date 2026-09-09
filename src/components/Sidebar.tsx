@@ -7,8 +7,11 @@ import {
   CreditCard,
   FileBarChart2,
   Users,
+  Ticket,
   ShoppingBag,
   ShieldCheck,
+  Shield,
+  ScrollText,
   ChevronLeft,
   ChevronRight,
   X,
@@ -42,7 +45,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
   isCollapsed = false,
   setIsCollapsed,
   isMobileOpen = false,
-  setIsMobileOpen
+  setIsMobileOpen,
 }) => {
   const handleOpenStore = onOpenStoreModal || onOpenStoreCheckout || (() => {});
   const displayAlertsCount = criticalAlertsCount || stockAlertsCount || 0;
@@ -64,49 +67,80 @@ export const Sidebar: React.FC<SidebarProps> = ({
       aliases: ['dashboard', 'analytics'],
       label: 'Live Analytics',
       icon: LayoutDashboard,
-      badge: null
+      badge: null,
+      permission: 'dashboard.view'
     },
     {
       id: 'orders',
       aliases: ['orders'],
       label: 'Orders & Pipeline',
       icon: Package,
-      badge: pendingOrdersCount > 0 ? { text: `${pendingOrdersCount}`, type: 'warning' } : null
+      badge: pendingOrdersCount > 0 ? { text: `${pendingOrdersCount}`, type: 'warning' } : null,
+      permission: 'orders.view'
     },
     {
       id: 'inventory',
       aliases: ['inventory'],
       label: 'Multi-Channel Inventory',
       icon: Layers,
-      badge: lowStockCount > 0 ? { text: `${lowStockCount}`, type: 'info' } : null
+      badge: lowStockCount > 0 ? { text: `${lowStockCount}`, type: 'info' } : null,
+      permission: 'inventory.view'
     },
     {
       id: 'alerts',
       aliases: ['alerts'],
       label: 'Stock Alerts & POs',
       icon: AlertTriangle,
-      badge: displayAlertsCount > 0 ? { text: `${displayAlertsCount}`, type: 'danger' } : null
+      badge: displayAlertsCount > 0 ? { text: `${displayAlertsCount}`, type: 'danger' } : null,
+      permission: 'inventory.manage'
     },
     {
       id: 'gateways',
       aliases: ['gateways'],
       label: 'Payment Gateways',
       icon: CreditCard,
-      badge: { text: 'Active', type: 'success' }
+      badge: { text: 'Active', type: 'success' },
+      permission: 'gateways.view'
     },
     {
       id: 'reports',
       aliases: ['reports'],
       label: 'Custom Reports',
       icon: FileBarChart2,
-      badge: null
+      badge: null,
+      permission: 'reports.view'
     },
     {
       id: 'reviews',
       aliases: ['reviews', 'customers'],
       label: 'CRM & Reviews',
       icon: Users,
-      badge: null
+      badge: null,
+      permission: 'reviews.manage'
+    },
+    {
+      id: 'vouchers',
+      aliases: ['vouchers'],
+      label: 'Vouchers',
+      icon: Ticket,
+      badge: null,
+      permission: 'vouchers.manage'
+    },
+    {
+      id: 'team',
+      aliases: ['team'],
+      label: 'Team & Roles',
+      icon: Shield,
+      badge: null,
+      permission: 'admins.manage'
+    },
+    {
+      id: 'audit',
+      aliases: ['audit', 'audit-logs'],
+      label: 'Audit Trail',
+      icon: ScrollText,
+      badge: null,
+      permission: 'audit.view'
     }
   ];
 
@@ -243,7 +277,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </div>
 
         {/* Bottom Card / Storefront Shortcut */}
-        <div className="p-3 lg:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50">
+        <div className="p-3 lg:p-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/50 dark:bg-slate-900/50 space-y-3">
           <div
             className={`
               p-3.5 rounded-xl bg-white dark:bg-slate-800/80

@@ -29,13 +29,13 @@ export const statusColors: Record<
     description: string;
   }
 > = {
-  'To Pay': {
+  'Pending': {
     bg: 'bg-rose-50 dark:bg-rose-950/40',
     text: 'text-rose-700 dark:text-rose-300',
     border: 'border-rose-200 dark:border-rose-900',
     badgeBg: 'bg-rose-500',
     step: 1,
-    description: 'Awaiting customer payment / gateway verification'
+    description: 'New order placed. Awaiting payment (online) or store dispatch'
   },
   'To Ship': {
     bg: 'bg-amber-50 dark:bg-amber-950/40',
@@ -46,18 +46,18 @@ export const statusColors: Record<
     description: 'Payment settled. Ready for pick, pack & AWB label generation'
   },
   'Shipped': {
-    bg: 'bg-blue-50 dark:bg-blue-950/40',
-    text: 'text-blue-700 dark:text-blue-300',
-    border: 'border-blue-200 dark:border-blue-900',
-    badgeBg: 'bg-blue-500',
+    bg: 'bg-sky-50 dark:bg-sky-950/40',
+    text: 'text-sky-700 dark:text-sky-300',
+    border: 'border-sky-200 dark:border-sky-900',
+    badgeBg: 'bg-sky-500',
     step: 3,
     description: 'Handed over to courier. In transit to sorting center'
   },
   'Out for Delivery': {
-    bg: 'bg-indigo-50 dark:bg-indigo-950/40',
-    text: 'text-indigo-700 dark:text-indigo-300',
-    border: 'border-indigo-200 dark:border-indigo-900',
-    badgeBg: 'bg-indigo-500',
+    bg: 'bg-blue-50 dark:bg-blue-950/40',
+    text: 'text-blue-700 dark:text-blue-300',
+    border: 'border-blue-200 dark:border-blue-900',
+    badgeBg: 'bg-blue-500',
     step: 4,
     description: 'Assigned to courier rider for same-day/next-day dropoff'
   },
@@ -93,6 +93,14 @@ export const statusColors: Record<
     step: 0,
     description: 'Order voided prior to dispatch'
   },
+  'Refund Requested': {
+    bg: 'bg-orange-50 dark:bg-orange-950/40',
+    text: 'text-orange-700 dark:text-orange-300',
+    border: 'border-orange-200 dark:border-orange-900',
+    badgeBg: 'bg-orange-500',
+    step: 0,
+    description: 'Customer requested a refund. Awaiting admin approval'
+  },
   'Refunded': {
     bg: 'bg-red-50 dark:bg-red-950/40',
     text: 'text-red-700 dark:text-red-300',
@@ -100,6 +108,22 @@ export const statusColors: Record<
     badgeBg: 'bg-red-500',
     step: 0,
     description: 'Returned item processed and payment reversed via gateway'
+  },
+  'Return Requested': {
+    bg: 'bg-indigo-50 dark:bg-indigo-950/40',
+    text: 'text-indigo-700 dark:text-indigo-300',
+    border: 'border-indigo-200 dark:border-indigo-900',
+    badgeBg: 'bg-indigo-500',
+    step: 0,
+    description: 'Customer requested a return. Awaiting admin approval'
+  },
+  'Returned': {
+    bg: 'bg-slate-100 dark:bg-slate-800',
+    text: 'text-slate-700 dark:text-slate-300',
+    border: 'border-slate-300 dark:border-slate-700',
+    badgeBg: 'bg-slate-500',
+    step: 0,
+    description: 'Returned items received and processed'
   }
 };
 
@@ -175,7 +199,7 @@ export const exportToCSV = (filename: string, rows: Record<string, any>[]) => {
   document.body.removeChild(link);
 };
 
-// ✅ Improved helper function para sa image URL
+// ✅ Improved helper function para sa image URL (same-origin /images via Vite/project static)
 export const getImageUrl = (path: string): string => {
   if (!path) return '';
   
@@ -184,11 +208,11 @@ export const getImageUrl = (path: string): string => {
     return path;
   }
   
-  // Kung nagsisimula sa /, idagdag ang base URL ng backend
+  // Kung nagsisimula sa /, relative na sa same origin (web app images)
   if (path.startsWith('/')) {
-    return `https://c-hub-backend-1jy4.onrender.com${path}`;
+    return path;
   }
   
-  // Kung relative path lang (walang /), idagdag ang base URL
-  return `https://c-hub-backend-1jy4.onrender.com/${path}`;
+  // Kung relative path lang (walang /), i-prefix ng /
+  return `/${path}`;
 };

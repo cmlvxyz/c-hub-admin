@@ -1,5 +1,5 @@
 export type OrderStatus =
-  | 'To Pay'
+  | 'Pending'
   | 'To Ship'
   | 'Shipped'
   | 'Out for Delivery'
@@ -7,7 +7,10 @@ export type OrderStatus =
   | 'To Review'
   | 'Completed'
   | 'Cancelled'
-  | 'Refunded';
+  | 'Refund Requested'
+  | 'Refunded'
+  | 'Return Requested'
+  | 'Returned';
 
 export type PaymentMethod =
   | 'GCash'
@@ -106,6 +109,35 @@ export interface Order {
   notes?: string;
   tags?: string[];
   updatedAt: string;
+  // ✅ Returns & Refunds (structured request + decision)
+  refundRequest?: {
+    reason: string;
+    requestedAt: string;
+    denied?: { note?: string; decidedAt?: string; by?: string };
+    approved?: { note?: string; decidedAt?: string; by?: string };
+  };
+  returnRequest?: {
+    reason: string;
+    requestedAt: string;
+    denied?: { note?: string; decidedAt?: string; by?: string };
+    approved?: { note?: string; decidedAt?: string; by?: string };
+  };
+  refund?: {
+    status: 'approved' | 'denied';
+    amount?: number;
+    method?: string;
+    note?: string;
+    decidedAt: string;
+    by?: string;
+  };
+  returnRef?: {
+    status: 'approved' | 'denied';
+    note?: string;
+    decidedAt: string;
+    by?: string;
+  };
+  refundedAt?: string;
+  returnedAt?: string;
 }
 
 export interface Product {
@@ -186,7 +218,7 @@ export interface Review {
   comment: string;
   verifiedPurchase: boolean;
   date: string;
-  status: 'published' | 'hidden';
+  status: 'published' | 'hidden' | 'pending' | 'rejected';
   adminReply?: {
     comment: string;
     date: string;
@@ -227,4 +259,53 @@ export interface AnalyticsSummary {
 
 // Add this at the bottom of the file
 export type DashboardAnalytics = AnalyticsSummary;
+
+export interface Voucher {
+  id: string;
+  code: string;
+  type: 'percent' | 'fixed';
+  value: number;
+  minSubtotal: number;
+  maxDiscount: number;
+  usageLimit: number;
+  usedCount: number;
+  perUserLimit: number;
+  users: Record<string, number>;
+  startsAt: string;
+  expiresAt: string | null;
+  active: boolean;
+  description: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface AdminAccount {
+  name: string;
+  username: string;
+  email: string;
+  role: string;
+  active: boolean;
+  createdAt: string | null;
+  updatedAt: string | null;
+}
+
+export interface RoleDef {
+  key: string;
+  label: string;
+  description: string;
+  permissions: string[];
+  isSuper: boolean;
+}
+
+export interface AuditLog {
+  id: string;
+  timestamp: string;
+  adminEmail: string;
+  adminName: string;
+  adminRole: string;
+  action: string;
+  target: string;
+  summary: string;
+  details?: Record<string, any>;
+}
 

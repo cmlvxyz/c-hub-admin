@@ -19,7 +19,10 @@ import {
   Plus,
   Send,
   AlertTriangle,
-  ArrowRight
+  ArrowRight,
+  XCircle,
+  Banknote,
+  MessageSquareX
 } from 'lucide-react';
 import { Order, OrderStatus, CarrierName } from '../types';
 import { formatPHP, statusColors } from '../utils';
@@ -29,10 +32,12 @@ interface OrderDetailModalProps {
   onClose: () => void;
   onUpdateStatus: (orderId: string, status: OrderStatus, note?: string) => void;
   onOpenPrintWaybillModal: (order: Order) => void;
+  onRefundDecision: (orderId: string, payload: { approve: boolean; amount?: number; method?: string; note?: string }) => void;
+  onReturnDecision: (orderId: string, payload: { approve: boolean; note?: string }) => void;
 }
 
 const statusOrderList: OrderStatus[] = [
-  'To Pay',
+  'Pending',
   'To Ship',
   'Shipped',
   'Out for Delivery',
@@ -41,15 +46,23 @@ const statusOrderList: OrderStatus[] = [
   'Completed'
 ];
 
+// Mga status kung saan puwede pa i-cancel (naaayon sa backend ALLOWED_TRANSITIONS)
+const CANCELLABLE: OrderStatus[] = ['Pending', 'To Ship'];
+
 export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   order,
   onClose,
   onUpdateStatus,
-  onOpenPrintWaybillModal
+  onOpenPrintWaybillModal,
+  onRefundDecision,
+  onReturnDecision
 }) => {
   const [copied, setCopied] = useState(false);
   const [timelineNote, setTimelineNote] = useState('');
   const [carrier, setCarrier] = useState<CarrierName>(order?.fulfillment?.carrier || 'J&T Express');
+  const [refundAmount, setRefundAmount] = useState<string>('');
+  const [refundMethod, setRefundMethod] = useState<string>('');
+  const [decisionNote, setDecisionNote] = useState<string>('');
 
   // ✅ If no order, don't render
   if (!order) return null;
@@ -75,6 +88,29 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
   const handleAdvanceStatus = (nextStatus: OrderStatus) => {
     onUpdateStatus(order.orderId, nextStatus, timelineNote || `Fulfillment milestone reached: ${nextStatus}`);
     setTimelineNote('');
+  };
+
+  const handleRefundDecision = (approve: boolean) => {
+    const payload: { approve: boolean; amount?: number; method?: string; note?: string } = {
+      approve,
+      note: decisionNote.trim() || undefined
+    };
+    if (approve) {
+      payload.amount = refundAmount.trim() ? Number(refundAmount) : undefined;
+      payload.method = refundMethod.trim() || undefined;
+    }
+    onRefundDecision(order.orderId, payload);
+    setDecisionNote('');
+    setRefundAmount('');
+    setRefundMethod('');
+  };
+
+  const handleReturnDecision = (approve: boolean) => {
+    onReturnDecision(order.orderId, {
+      approve,
+      note: decisionNote.trim() || undefined
+    });
+    setDecisionNote('');
   };
 
   // ✅ Safe customer data
@@ -157,8 +193,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
 
                 return (
                   <div key={st} className="flex flex-col items-center flex-1 relative z-10">
-                    <button
-                      onClick={() => handleAdvanceStatus(st)}
+                    <div
                       className={`w-7 h-7 sm:w-8 sm:h-8 rounded-full flex items-center justify-center text-xs font-semibold transition-all ${
                         isCurrent
                           ? 'bg-indigo-600 text-white ring-4 ring-indigo-500/20 scale-110'
@@ -166,10 +201,10 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                           ? 'bg-emerald-600 text-white'
                           : 'bg-slate-200 dark:bg-slate-700 text-slate-500'
                       }`}
-                      title={`Click to switch status to ${st}`}
+                      title={statusColors[st]?.description || st}
                     >
                       {isPassed ? <Check className="w-3.5 h-3.5" /> : stepNum}
-                    </button>
+                    </div>
                     <span
                       className={`text-[9px] sm:text-[10px] mt-1.5 font-medium text-center leading-tight max-w-[60px] truncate ${
                         isCurrent ? 'text-indigo-600 dark:text-indigo-400 font-semibold' : 'text-slate-500'
@@ -303,6 +338,56 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
                   </div>
                 </div>
               </div>
+
+              {/* Returns & Refunds Info */}
+              {(order.status === 'Refund Requested' || order.status === 'Return Requested' || order.refund || order.returnRef) && (
+                <div className="p-4 rounded-xl bg-white dark:bg-slate-800/60 border border-orange-200 dark:border-orange-900/50 shadow-sm space-y-3">
+                  <h4 className="text-xs font-semibold uppercase tracking-wider text-orange-600 dark:text-orange-400 flex items-center gap-1.5">
+                    <RotateCcw className="w-3.5 h-3.5" />
+                    Returns & Refunds
+                  </h4>
+                  {order.refundRequest && (
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300">
+                      <span className="font-semibold text-red-600 dark:text-red-400">Refund request</span>
+                      <p className="text-slate-500">{order.refundRequest.reason}</p>
+                      <p className="text-[10px] text-slate-400">{new Date(order.refundRequest.requestedAt).toLocaleString()}</p>
+                    </div>
+                  )}
+                  {order.returnRequest && (
+                    <div className="text-[11px] text-slate-600 dark:text-slate-300">
+                      <span className="font-semibold text-indigo-600 dark:text-indigo-400">Return request</span>
+                      <p className="text-slate-500">{order.returnRequest.reason}</p>
+                      <p className="text-[10px] text-slate-400">{new Date(order.returnRequest.requestedAt).toLocaleString()}</p>
+                    </div>
+                  )}
+                  {order.refund?.status === 'approved' && (
+                    <div className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                      <span className="font-semibold">Refund approved</span> — {formatPHP(order.refund.amount || order.total || 0)} via {order.refund.method || 'original payment method'}
+                      {(order.refund.note || order.refund.by) && (
+                        <p className="text-slate-500">{order.refund.note}{order.refund.note && order.refund.by ? ' • ' : ''}{order.refund.by ? `by ${order.refund.by}` : ''}</p>
+                      )}
+                    </div>
+                  )}
+                  {order.refund?.status === 'denied' && (
+                    <div className="text-[11px] text-amber-600 dark:text-amber-400">
+                      <span className="font-semibold">Refund denied</span>
+                      <p className="text-slate-500">{order.refund.note || 'No reason provided'}</p>
+                    </div>
+                  )}
+                  {order.returnRef?.status === 'approved' && (
+                    <div className="text-[11px] text-emerald-600 dark:text-emerald-400">
+                      <span className="font-semibold">Return approved</span> — stock restored
+                      {order.returnRef.note && <p className="text-slate-500">{order.returnRef.note}</p>}
+                    </div>
+                  )}
+                  {order.returnRef?.status === 'denied' && (
+                    <div className="text-[11px] text-amber-600 dark:text-amber-400">
+                      <span className="font-semibold">Return denied</span>
+                      <p className="text-slate-500">{order.returnRef.note || 'No reason provided'}</p>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
 
             {/* Right Column: Order Items & Milestone Timeline */}
@@ -405,18 +490,80 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
         {/* Modal Bottom Action Bar */}
         <div className="p-4 bg-slate-50 dark:bg-slate-800/40 border-t border-slate-200 dark:border-slate-800 flex flex-wrap items-center justify-between gap-3">
           <div className="flex items-center gap-2">
-            <button
-              onClick={() => onUpdateStatus(order.orderId, 'Cancelled', 'Cancelled by admin')}
-              className="px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/60 rounded-lg transition-colors"
-            >
-              Cancel Order
-            </button>
-            <button
-              onClick={() => onUpdateStatus(order.orderId, 'Refunded', 'Payment refunded via gateway')}
-              className="px-3 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 dark:hover:bg-slate-800 rounded-lg transition-colors"
-            >
-              Issue Refund
-            </button>
+            {CANCELLABLE.includes(order.status) && (
+              <button
+                onClick={() => handleAdvanceStatus('Cancelled')}
+                className="px-3 py-2 text-xs font-semibold text-red-600 hover:bg-red-50 dark:hover:bg-red-950/60 rounded-lg transition-colors"
+              >
+                Cancel Order
+              </button>
+            )}
+            {order.status === 'Refund Requested' && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="number"
+                  min={0}
+                  step="0.01"
+                  placeholder={`Refund amount (default ₱${order.total.toLocaleString()})`}
+                  value={refundAmount}
+                  onChange={e => setRefundAmount(e.target.value)}
+                  className="w-44 px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-slate-900 dark:text-white"
+                />
+                <input
+                  type="text"
+                  placeholder="Refund method (e.g. BPI, GCash)"
+                  value={refundMethod}
+                  onChange={e => setRefundMethod(e.target.value)}
+                  className="w-44 px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-slate-900 dark:text-white"
+                />
+                <input
+                  type="text"
+                  placeholder="Decision note (optional)"
+                  value={decisionNote}
+                  onChange={e => setDecisionNote(e.target.value)}
+                  className="w-44 px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-red-500 text-slate-900 dark:text-white"
+                />
+                <button
+                  onClick={() => handleRefundDecision(true)}
+                  className="px-3 py-2 text-xs font-semibold text-white bg-red-600 hover:bg-red-700 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <ShieldCheck className="w-3.5 h-3.5" />
+                  Approve & Issue Refund
+                </button>
+                <button
+                  onClick={() => handleRefundDecision(false)}
+                  className="px-3 py-2 text-xs font-semibold text-red-600 bg-red-50 hover:bg-red-100 dark:bg-red-950/40 dark:hover:bg-red-950/70 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  Deny Refund
+                </button>
+              </div>
+            )}
+            {order.status === 'Return Requested' && (
+              <div className="flex items-center gap-2 flex-wrap">
+                <input
+                  type="text"
+                  placeholder="Decision note (optional)"
+                  value={decisionNote}
+                  onChange={e => setDecisionNote(e.target.value)}
+                  className="w-52 px-3 py-2 text-xs bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-lg focus:outline-none focus:ring-1 focus:ring-indigo-500 text-slate-900 dark:text-white"
+                />
+                <button
+                  onClick={() => handleReturnDecision(true)}
+                  className="px-3 py-2 text-xs font-semibold text-white bg-indigo-600 hover:bg-indigo-700 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <RotateCcw className="w-3.5 h-3.5" />
+                  Approve Return
+                </button>
+                <button
+                  onClick={() => handleReturnDecision(false)}
+                  className="px-3 py-2 text-xs font-semibold text-indigo-600 bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/40 dark:hover:bg-indigo-950/70 rounded-lg transition-colors flex items-center gap-1"
+                >
+                  <XCircle className="w-3.5 h-3.5" />
+                  Deny Return
+                </button>
+              </div>
+            )}
           </div>
 
           <div className="flex items-center gap-2">
@@ -427,7 +574,7 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               Close
             </button>
 
-            {order.status === 'To Pay' && (
+            {order.status === 'Pending' && (
               <button
                 onClick={() => handleAdvanceStatus('To Ship')}
                 className="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
@@ -464,6 +611,26 @@ export const OrderDetailModal: React.FC<OrderDetailModalProps> = ({
               >
                 <CheckCircle2 className="w-3.5 h-3.5" />
                 <span>Confirm Doorstep Delivery</span>
+              </button>
+            )}
+
+            {order.status === 'Delivered' && (
+              <button
+                onClick={() => handleAdvanceStatus('To Review')}
+                className="px-4 py-2 text-xs font-semibold bg-indigo-600 hover:bg-indigo-700 text-white rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <span>Complete Delivery → Send to Review</span>
+                <ArrowRight className="w-3.5 h-3.5" />
+              </button>
+            )}
+
+            {order.status === 'To Review' && (
+              <button
+                onClick={() => handleAdvanceStatus('Completed')}
+                className="px-4 py-2 text-xs font-semibold bg-teal-600 hover:bg-teal-700 text-white rounded-lg transition-colors flex items-center gap-1.5 shadow-sm"
+              >
+                <CheckCircle2 className="w-3.5 h-3.5" />
+                <span>Close & Complete Order</span>
               </button>
             )}
           </div>
