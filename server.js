@@ -11,14 +11,13 @@ const turso = createClient({
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
-// ❌ REMOVE THIS: app.get('/', ...)
-
 // Health check
 app.get('/api/health', async (req, res) => {
   try {
     await turso.execute('SELECT 1');
     res.json({ status: 'healthy', database: 'connected' });
   } catch (error) {
+    console.error('Health check error:', error);
     res.status(500).json({ status: 'unhealthy', error: error.message });
   }
 });
@@ -29,19 +28,22 @@ app.get('/api/orders', async (req, res) => {
     const result = await turso.execute('SELECT * FROM orders');
     res.json(result.rows);
   } catch (error) {
+    console.error('Orders error:', error);
     res.status(500).json({ error: error.message });
   }
 });
 
 // Auth bootstrap
 app.post('/api/auth/admin/bootstrap', async (req, res) => {
-  res.json({ success: true, message: 'Bootstrap successful' });
+  try {
+    res.json({ success: true, message: 'Bootstrap successful' });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
-// Export for Vercel
 export default app;
 
-// Local development
 if (process.env.NODE_ENV !== 'production') {
   const PORT = process.env.PORT || 3007;
   app.listen(PORT, () => {
