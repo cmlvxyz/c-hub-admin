@@ -13,6 +13,18 @@ const turso = createClient({
   authToken: process.env.TURSO_AUTH_TOKEN,
 });
 
+// SSE client registry + broadcast (used to push order deletes to open tabs)
+const sseClients = [];
+function broadcast(event, data) {
+  sseClients.forEach((client) => {
+    try {
+      client.res.write(`event: ${event}\ndata: ${JSON.stringify(data)}\n\n`);
+    } catch (e) {
+      console.error('SSE broadcast error:', e?.message || e);
+    }
+  });
+}
+
 // ────────────────────────────────────────────────────────────────────────
 // Row mappers — identical to c-hub-store/server/db.ts (shared schema).
 // The deploy must return PARSED JSON columns, otherwise the admin UI
@@ -150,6 +162,26 @@ app.patch('/api/orders/:id', async (req, res) => {
   }
 });
 
+// Order permanent delete
+app.delete('/api/orders/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    const existing = await turso.execute({
+      sql: 'SELECT order_id FROM orders WHERE order_id = ?',
+      args: [id],
+    });
+    if (existing.rows.length === 0) {
+      return res.status(404).json({ error: 'Order not found.' });
+    }
+    await turso.execute({ sql: 'DELETE FROM orders WHERE order_id = ?', args: [id] });
+    broadcast('order-deleted', { orderId: id });
+    res.json({ success: true, deleted: id });
+  } catch (error) {
+    console.error('Order delete error:', error);
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Auth bootstrap — returns a session token so the admin frontend's
 // auto-poll and authorized fetches function correctly.
 app.post('/api/auth/admin/bootstrap', async (req, res) => {
@@ -185,16 +217,21 @@ app.get('/api/orders/stream/public', (req, res) => {
   res.setHeader('Connection', 'keep-alive');
   res.setHeader('Access-Control-Allow-Origin', '*');
 
+  const client = { id: Date.now(), res };
+  sseClients.push(client);
+
   // Send initial connection message
-  res.write('data: {"event":"connected","message":"SSE stream established"}\n\n');
+  res.write('event: connected\ndata: {"event":"connected","message":"SSE stream established"}\n\n');
 
   // Keep connection alive
   const interval = setInterval(() => {
-    res.write('data: {"event":"ping"}\n\n');
+    res.write(': ping\n\n');
   }, 30000);
 
   req.on('close', () => {
     clearInterval(interval);
+    const idx = sseClients.findIndex((c) => c.id === client.id);
+    if (idx !== -1) sseClients.splice(idx, 1);
     res.end();
   });
 });

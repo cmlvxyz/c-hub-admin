@@ -726,11 +726,6 @@ export function App() {
       });
       if (response.ok) {
         setOrders(prev => prev.filter(o => o.orderId !== orderId));
-        if (soundEnabled) playNotificationChime('alert');
-        setLiveToast({
-          message: `Order #${orderId} deleted permanently`,
-          id: Date.now().toString()
-        });
       }
     } catch (error) {
       console.error('Error deleting order:', error);
